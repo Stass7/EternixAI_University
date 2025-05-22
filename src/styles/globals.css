@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 10, 10, 10;
+  --background-end-rgb: 0, 0, 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer components {
+  .glassmorphism {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 rounded-xl shadow-lg;
+  }
+  
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 transition-all text-white font-medium;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg bg-dark-200 hover:bg-dark-300 transition-all text-white font-medium border border-white/10;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-2 bg-dark-200 border border-white/10 rounded-lg text-white placeholder:text-gray-400 focus:ring-primary-500 focus:border-primary-500;
+  }
+  
+  .card {
+    @apply p-6 glassmorphism hover:bg-white/20 transition-all;
+  }
+  
+  .section {
+    @apply py-12 md:py-20;
+  }
+  
+  .container-custom {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+} 
