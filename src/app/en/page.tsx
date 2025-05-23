@@ -1,3 +1,5 @@
+"use client"
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -84,7 +86,7 @@ export default function HomePage() {
               {
                 title: "Quality Video Lessons",
                 description: "All materials are recorded by professionals with years of experience",
-                icon: "📚"
+                icon: "��"
               },
               {
                 title: "Learning Flexibility",
