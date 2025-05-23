@@ -1,3 +1,5 @@
+"use client"
+
 import Link from 'next/link'
 import { Metadata } from 'next'
 import { motion } from 'framer-motion'
