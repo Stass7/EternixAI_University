@@ -6,21 +6,20 @@ services:
     startCommand: npm start
     envVars:
       - key: NODE_ENV
-        value: production
+        value: development
+      - key: MONGODB_URI
+        value: mongodb+srv://stanislavsk1981:1CPHQ1urihrXBbqz@clustereternixaiuniver.2z39gmp.mongodb.net/?retryWrites=true&w=majority&appName=ClusterEternixAIUniver
+      - key: NEXTAUTH_URL
+        value: https://eternixai-university.onrender.com
+      - key: NEXTAUTH_SECRET
+        value: EbTRr+0qb0U+FOKQwhqjV4MBjsPvWk5ADC3IvsP+wC4=
+      - key: PORT
+        value: 13187f56ae069d8c38901366f15f1012
       - key: NEXT_PUBLIC_APP_URL
         fromService:
           name: eternixai-university
           type: web
           property: url
-      - key: MONGODB_URI
-        sync: false
-      - key: NEXTAUTH_URL
-        fromService:
-          name: eternixai-university
-          type: web
-          property: url
-      - key: NEXTAUTH_SECRET
-        sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET

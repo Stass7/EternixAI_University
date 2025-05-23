@@ -51,7 +51,7 @@ npm install
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # База данных
-MONGODB_URI=mongodb://localhost:27017/eternixai_university
+MONGODB_URI=mongodb+srv://stanislavsk1981:1CPHQ1urihrXBbqz@clustereternixaiuniver.2z39gmp.mongodb.net/?retryWrites=true&w=majority&appName=ClusterEternixAIUniver
 
 # Авторизация - NextAuth
 NEXTAUTH_URL=http://localhost:3000
@@ -70,7 +70,6 @@ STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
-
 4. Запустите проект в режиме разработки:
 ```bash
 npm run dev
