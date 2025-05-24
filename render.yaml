@@ -2,11 +2,9 @@ services:
   - type: web
     name: eternixai-university
     env: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: yarn install && yarn build
+    startCommand: yarn start
     envVars:
-      - key: NODE_ENV
-        value: development
       - key: NEXT_PUBLIC_APP_URL
         fromService:
           name: eternixai-university
