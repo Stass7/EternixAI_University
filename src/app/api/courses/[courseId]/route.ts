@@ -5,9 +5,10 @@ import mongoose from 'mongoose'
 
 export async function GET(
   request: Request,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    const params = await context.params
     const courseId = params.courseId
     
     // Проверяем валидность идентификатора
