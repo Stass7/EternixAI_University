@@ -1,9 +1,15 @@
 import Stripe from 'stripe'
 
-// Инициализация Stripe с API ключом
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+// Инициализация Stripe с API ключом только если он существует
+const stripeApiKey = process.env.STRIPE_SECRET_KEY
+
+if (!stripeApiKey && process.env.NODE_ENV !== 'development') {
+  console.warn('Warning: STRIPE_SECRET_KEY is not set. Stripe functionality will be disabled.')
+}
+
+const stripe = stripeApiKey ? new Stripe(stripeApiKey, {
   apiVersion: '2025-04-30.basil',
-})
+}) : null
 
 export async function createCheckoutSession(params: {
   courseId: string;
@@ -12,6 +18,10 @@ export async function createCheckoutSession(params: {
   userId: string;
   email: string;
 }) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.')
+  }
+
   const { courseId, courseTitle, price, userId, email } = params
 
   // Создаем сессию для оплаты
@@ -44,6 +54,10 @@ export async function createCheckoutSession(params: {
 }
 
 export async function retrieveCheckoutSession(sessionId: string) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.')
+  }
+  
   return await stripe.checkout.sessions.retrieve(sessionId)
 }
 
