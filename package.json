@@ -20,7 +20,6 @@
   "homepage": "https://github.com/Stass7/EternixAI_University#readme",
   "description": "",
   "dependencies": {
-    "@tailwindcss/postcss": "^0.0.3",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
