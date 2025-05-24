@@ -18,9 +18,25 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+/* Утилитарные классы для opacity */
+@layer utilities {
+  .text-white-80 { color: rgba(255, 255, 255, 0.8); }
+  .text-white-70 { color: rgba(255, 255, 255, 0.7); }
+  .text-white-60 { color: rgba(255, 255, 255, 0.6); }
+  .text-white-50 { color: rgba(255, 255, 255, 0.5); }
+  .text-white-40 { color: rgba(255, 255, 255, 0.4); }
+  .bg-white-10 { background-color: rgba(255, 255, 255, 0.1); }
+  .bg-white-20 { background-color: rgba(255, 255, 255, 0.2); }
+  .bg-primary-20 { background-color: rgba(14, 165, 233, 0.2); }
+  .border-white-10 { border-color: rgba(255, 255, 255, 0.1); }
+}
+
 @layer components {
   .glassmorphism {
-    @apply bg-white/10 border border-white/20 rounded-xl shadow-lg;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -30,15 +46,35 @@ body {
   }
   
   .btn-secondary {
-    @apply px-4 py-2 rounded-lg bg-dark-200 hover:bg-dark-300 transition-all text-white font-medium border border-white/10;
+    @apply px-4 py-2 rounded-lg bg-dark-200 hover:bg-dark-300 transition-all text-white font-medium;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .input-field {
-    @apply w-full px-4 py-2 bg-dark-200 border border-white/10 rounded-lg text-white placeholder:text-gray-400 focus:ring-primary-500 focus:border-primary-500;
+    @apply w-full px-4 py-2 bg-dark-200 rounded-lg text-white font-medium;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .input-field:focus {
+    @apply ring-primary-500 border-primary-500;
+  }
+  
+  .input-field::placeholder {
+    color: rgb(156, 163, 175);
   }
   
   .card {
-    @apply p-6 glassmorphism hover:bg-white/20 transition-all;
+    @apply p-6 transition-all;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .card:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
   
   .section {

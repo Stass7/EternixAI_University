@@ -17,7 +17,15 @@ export default function Header({ locale }: HeaderProps) {
   ]
 
   return (
-    <header className="bg-dark-300/80 sticky top-0 z-50 border-b border-white/10" style={{ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+    <header 
+      className="sticky top-0 z-50 border-b" 
+      style={{ 
+        background: 'rgba(18, 18, 18, 0.8)',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(16px)', 
+        WebkitBackdropFilter: 'blur(16px)' 
+      }}
+    >
       <div className="container-custom py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -43,7 +51,7 @@ export default function Header({ locale }: HeaderProps) {
               >
                 <Link 
                   href={link.href}
-                  className="text-white/80 hover:text-white transition-colors duration-200"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
                 >
                   {link.label}
                 </Link>
@@ -68,7 +76,7 @@ export default function Header({ locale }: HeaderProps) {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.4 }}
             >
-              <Link href={`/${altLocale}`} className="text-white/70 hover:text-white">
+              <Link href={`/${altLocale}`} className="text-gray-400 hover:text-white">
                 {altLocale.toUpperCase()}
               </Link>
             </motion.div>

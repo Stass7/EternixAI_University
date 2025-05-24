@@ -12,7 +12,7 @@ export default function Error({
       <div className="text-center">
         <h1 className="text-6xl font-bold text-white mb-4">500</h1>
         <h2 className="text-2xl font-semibold text-white mb-4">Something went wrong!</h2>
-        <p className="text-white/70 mb-8">An error occurred while processing your request.</p>
+        <p className="text-gray-300 mb-8">An error occurred while processing your request.</p>
         <button
           onClick={reset}
           className="inline-block px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors mr-4"
