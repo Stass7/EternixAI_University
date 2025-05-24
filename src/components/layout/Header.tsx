@@ -17,7 +17,7 @@ export default function Header({ locale }: HeaderProps) {
   ]
 
   return (
-    <header className="bg-dark-300/80 backdrop-blur-lg sticky top-0 z-50 border-b border-white/10">
+    <header className="bg-dark-300/80 sticky top-0 z-50 border-b border-white/10" style={{ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
       <div className="container-custom py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
