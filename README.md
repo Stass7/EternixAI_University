@@ -55,7 +55,7 @@ MONGODB_URI=mongodb+srv://stanislavsk1981:1CPHQ1urihrXBbqz@clustereternixaiunive
 
 # Авторизация - NextAuth
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-nextauth-secret-key-here
+NEXTAUTH_SECRET=EbTRr+0qb0U+FOKQwhqjV4MBjsPvWk5ADC3IvsP+wC4=
 
 # Google OAuth (опционально)
 GOOGLE_CLIENT_ID=
@@ -121,4 +121,5 @@ src/
 
 ## Лицензия
 
-[MIT](LICENSE) 
+[MIT](LICENSE)
+
