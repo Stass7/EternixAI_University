@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion } from '@/utils/motion-stub'
 import SignInForm from '@/components/auth/SignInForm'
 
 export default function SignInPageClient() {

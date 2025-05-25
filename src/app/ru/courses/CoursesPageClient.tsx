@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion } from '@/utils/motion-stub'
 import CoursesList from '@/components/courses/CoursesList'
 
 export default function CoursesPageClient() {
