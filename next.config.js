@@ -7,8 +7,6 @@ const nextConfig = {
   // Отключаем статическую генерацию для отладки
   trailingSlash: false,
   generateEtags: false,
-  // Настройки для внешних пакетов
-  serverExternalPackages: [],
 }
 
 module.exports = nextConfig 
