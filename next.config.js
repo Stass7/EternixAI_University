@@ -4,6 +4,11 @@ const nextConfig = {
   images: {
     domains: ['i.ytimg.com', 'img.youtube.com'],
   },
+  // Отключаем статическую генерацию для отладки
+  trailingSlash: false,
+  generateEtags: false,
+  // Настройки для внешних пакетов
+  serverExternalPackages: [],
 }
 
 module.exports = nextConfig 
