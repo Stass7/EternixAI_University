@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { motion } from '@/utils/motion-stub'
+import { motion } from 'motion/react'
 
 type SignInFormProps = {
   locale: string

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion } from '@/utils/motion-stub'
+import { motion } from 'motion/react'
 import { ICourse } from '@/models/Course'
 
 type CourseCardProps = {

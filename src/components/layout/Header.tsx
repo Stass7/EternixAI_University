@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { motion } from '@/utils/motion-stub'
+import { motion } from 'motion/react'
 
 type HeaderProps = {
   locale: string

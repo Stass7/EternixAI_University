@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { motion } from '@/utils/motion-stub'
+import { motion } from 'motion/react'
 
 type YouTubePlayerProps = {
   videoId: string
