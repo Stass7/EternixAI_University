@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import CourseCard from './CourseCard';
 import { ICourse } from '@/models/Course';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 type CoursesListProps = {
   locale: string;
