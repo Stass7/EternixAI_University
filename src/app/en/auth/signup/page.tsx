@@ -1,6 +1,4 @@
-import Link from 'next/link'
 import { Metadata } from 'next'
-import SignUpForm from '@/components/auth/SignUpForm'
 import SignUpPageClient from './SignUpPageClient'
 
 export const metadata: Metadata = {
