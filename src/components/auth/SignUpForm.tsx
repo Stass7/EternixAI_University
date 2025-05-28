@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
@@ -14,6 +16,8 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
   
   const translations = {
     ru: {
@@ -29,6 +33,9 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
       orContinueWith: 'или продолжить с',
       googleAuth: 'Google',
       githubAuth: 'GitHub',
+      passwordMismatch: 'Пароли не совпадают',
+      registrationSuccess: 'Регистрация успешна! Выполняется вход...',
+      registrationError: 'Ошибка регистрации. Попробуйте снова.',
     },
     en: {
       nameLabel: 'Full Name',
@@ -43,6 +50,9 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
       orContinueWith: 'or continue with',
       googleAuth: 'Google',
       githubAuth: 'GitHub',
+      passwordMismatch: 'Passwords do not match',
+      registrationSuccess: 'Registration successful! Signing in...',
+      registrationError: 'Registration failed. Please try again.',
     }
   }
   
@@ -50,20 +60,67 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     
     if (password !== confirmPassword) {
-      alert(locale === 'ru' ? 'Пароли не совпадают' : 'Passwords do not match')
+      setError(t.passwordMismatch)
       return
     }
     
     setLoading(true)
     
-    // Здесь будет интеграция с NextAuth.js для регистрации
-    
-    // Имитация задержки запроса
-    setTimeout(() => {
+    try {
+      // Регистрируем пользователя
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+      
+      // Автоматически входим после регистрации
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+      
+      if (signInResult?.error) {
+        throw new Error('Sign in failed after registration')
+      }
+      
+      // Перенаправляем на главную страницу
+      router.push(`/${locale}`)
+      
+    } catch (error) {
+      console.error('Registration error:', error)
+      setError(error instanceof Error ? error.message : t.registrationError)
+    } finally {
       setLoading(false)
-    }, 1500)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn('google', { 
+        callbackUrl: `/${locale}`,
+        redirect: true 
+      })
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      setError('Google sign in failed')
+    }
   }
   
   return (
@@ -74,6 +131,12 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
       onSubmit={handleSubmit}
       className="mt-8 space-y-6"
     >
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+      
       <div className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
@@ -169,11 +232,11 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
           </div>
         </div>
         
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6">
           <button 
             type="button"
-            onClick={() => alert('Google Auth')}  
-            className="btn-secondary flex justify-center py-2"
+            onClick={handleGoogleSignIn}
+            className="btn-secondary w-full flex justify-center py-2"
           >
             <span className="sr-only">Sign up with Google</span>
             <svg 
@@ -192,30 +255,6 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
               <path d="M12 2a9.96 9.96 0 0 1 7.383 3.256L12 12V2Z"></path>
             </svg>
             {t.googleAuth}
-          </button>
-          
-          <button 
-            type="button"
-            onClick={() => alert('GitHub Auth')}  
-            className="btn-secondary flex justify-center py-2"
-          >
-            <span className="sr-only">Sign up with GitHub</span>
-            <svg 
-              className="h-5 w-5 mr-2" 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
-              <path d="M9 18c-4.51 2-5-2-7-2"></path>
-            </svg>
-            {t.githubAuth}
           </button>
         </div>
       </div>
