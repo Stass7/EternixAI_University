@@ -59,8 +59,8 @@ export default function SignInForm({ locale }: SignInFormProps) {
       if (result?.error) {
         setError(t.signInError)
       } else if (result?.ok) {
-        // Перенаправляем на главную страницу
-        router.push(`/${locale}`)
+        // Перенаправляем на страницу профиля
+        router.push(`/${locale}/profile`)
       }
     } catch (error) {
       console.error('Sign in error:', error)
@@ -73,7 +73,7 @@ export default function SignInForm({ locale }: SignInFormProps) {
   const handleGoogleSignIn = async () => {
     try {
       await signIn('google', { 
-        callbackUrl: `/${locale}`,
+        callbackUrl: `/${locale}/profile`,
         redirect: true 
       })
     } catch (error) {
