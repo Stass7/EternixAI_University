@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/config'
 import connectToDatabase from '@/lib/db/mongodb'
 import User from '@/models/User'
 import Course from '@/models/Course'
+import { Types } from 'mongoose'
 
 // GET - получить все курсы для админа
 export async function GET(request: NextRequest) {
@@ -60,8 +61,8 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      courses: courses.map(course => ({
-        _id: course._id.toString(),
+      courses: courses.map((course: any) => ({
+        _id: (course._id as Types.ObjectId).toString(),
         title: course.title,
         description: course.description,
         price: course.price,

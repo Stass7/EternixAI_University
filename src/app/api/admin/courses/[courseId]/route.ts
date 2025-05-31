@@ -8,9 +8,10 @@ import Course from '@/models/Course'
 // GET - получить конкретный курс
 export async function GET(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -66,9 +67,10 @@ export async function GET(
 // PUT - обновить курс
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -180,9 +182,10 @@ export async function PUT(
 // DELETE - удалить курс
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
