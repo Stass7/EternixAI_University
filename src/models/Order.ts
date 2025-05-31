@@ -79,7 +79,6 @@ const OrderSchema = new Schema<IOrder>(
 // Индексы для быстрого поиска
 OrderSchema.index({ userId: 1, status: 1 })
 OrderSchema.index({ courseId: 1 })
-OrderSchema.index({ stripeSessionId: 1 })
 
 // Проверка существования модели
 const Order = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema)
