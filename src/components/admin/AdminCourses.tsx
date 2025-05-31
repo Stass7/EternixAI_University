@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getThumbnailFromUrl, isYouTubeUrl, extractYouTubeVideoId } from '@/utils/youtube'
 
 interface AdminCoursesProps {
   locale: string
@@ -300,60 +299,28 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     })
   }
 
-  // Функция для получения thumbnail из YouTube URL
-  const getVideoThumbnail = (videoUrl: string): string | null => {
-    if (!videoUrl || !isYouTubeUrl(videoUrl)) return null
-    return getThumbnailFromUrl(videoUrl, 'hq')
-  }
-
-  // Функция для автоматического обновления изображения курса из первого урока
-  const updateCourseImageFromFirstLesson = () => {
-    if (formData.lessons.length > 0 && !formData.imageUrl) {
-      const firstLesson = formData.lessons.sort((a, b) => a.order - b.order)[0]
-      if (firstLesson.videoUrl) {
-        const thumbnail = getVideoThumbnail(firstLesson.videoUrl)
-        if (thumbnail) {
-          setFormData(prev => ({
-            ...prev,
-            imageUrl: thumbnail
-          }))
-        }
-      }
-    }
-  }
-
-  // Обновленная функция добавления урока
   const addLesson = () => {
     const newLesson: Lesson = {
-      id: `lesson-${Date.now()}`,
+      id: Date.now().toString(),
       title: { ru: '', en: '' },
       description: { ru: '', en: '' },
       videoUrl: '',
       duration: 0,
       order: formData.lessons.length + 1
     }
-    
     setFormData(prev => ({
       ...prev,
       lessons: [...prev.lessons, newLesson]
     }))
   }
 
-  // Обновленная функция изменения урока с автоматическим thumbnail
   const updateLesson = (lessonId: string, updates: Partial<Lesson>) => {
     setFormData(prev => ({
       ...prev,
-      lessons: prev.lessons.map(lesson => 
+      lessons: prev.lessons.map(lesson =>
         lesson.id === lessonId ? { ...lesson, ...updates } : lesson
       )
     }))
-
-    // Если обновляется videoUrl, автоматически обновляем изображение курса
-    if (updates.videoUrl) {
-      setTimeout(() => {
-        updateCourseImageFromFirstLesson()
-      }, 100)
-    }
   }
 
   const removeLesson = (lessonId: string) => {
@@ -534,16 +501,15 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
 
       {/* Модальное окно создания/редактирования курса */}
       {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-dark-100 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-300 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-white mb-6">
-              {showCreateModal ? t.create : t.edit} {t.courseTitle.toLowerCase()}
+              {editingCourse ? t.edit : t.create} {t.courseTitle}
             </h2>
-
+            
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Базовая информация о курсе */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Название на русском */}
+              {/* Основная информация */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-white/70 mb-2">{t.titleRu}</label>
                   <input
@@ -553,12 +519,11 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                       ...prev,
                       title: { ...prev.title, ru: e.target.value }
                     }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     required
                   />
                 </div>
-
-                {/* Название на английском */}
+                
                 <div>
                   <label className="block text-white/70 mb-2">{t.titleEn}</label>
                   <input
@@ -568,14 +533,14 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                       ...prev,
                       title: { ...prev.title, en: e.target.value }
                     }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     required
                   />
                 </div>
               </div>
 
               {/* Описания */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-white/70 mb-2">{t.descriptionRu}</label>
                   <textarea
@@ -584,11 +549,12 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                       ...prev,
                       description: { ...prev.description, ru: e.target.value }
                     }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500 h-24"
+                    rows={4}
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     required
                   />
                 </div>
-
+                
                 <div>
                   <label className="block text-white/70 mb-2">{t.descriptionEn}</label>
                   <textarea
@@ -597,209 +563,155 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                       ...prev,
                       description: { ...prev.description, en: e.target.value }
                     }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500 h-24"
+                    rows={4}
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     required
                   />
                 </div>
               </div>
 
-              {/* Цены и категория */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-white/70 mb-2">{t.originalPrice}</label>
-                  <input
-                    type="number"
-                    value={formData.originalPrice}
-                    onChange={(e) => setFormData(prev => ({ ...prev, originalPrice: e.target.value }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                    required
-                  />
-                </div>
-
+              {/* Цена и категория */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-white/70 mb-2">{t.coursePrice}</label>
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     required
                   />
                 </div>
-
+                
+                <div>
+                  <label className="block text-white/70 mb-2">{t.originalPrice}</label>
+                  <input
+                    type="number"
+                    value={formData.originalPrice}
+                    onChange={(e) => setFormData(prev => ({ ...prev, originalPrice: e.target.value }))}
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+                
                 <div>
                   <label className="block text-white/70 mb-2">{t.category}</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     required
                   >
                     <option value="">{t.selectCategory}</option>
                     {categories.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </option>
+                      <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* НОВАЯ СЕКЦИЯ ИЗОБРАЖЕНИЙ */}
+              {/* Изображение */}
               <div>
                 <label className="block text-white/70 mb-2">{t.image}</label>
-                
-                {/* Превью изображения */}
-                {formData.imageUrl && (
-                  <div className="mb-4">
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="Course preview" 
-                      className="w-full max-w-md h-40 object-cover rounded-lg border border-white/10"
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="imageUpload"
+                  />
+                  <label
+                    htmlFor="imageUpload"
+                    className="btn-secondary px-4 py-2 cursor-pointer"
+                  >
+                    {uploading ? t.uploading : t.uploadImage}
+                  </label>
+                  {formData.imageUrl && (
+                    <img
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      className="w-20 h-16 object-cover rounded-lg"
                     />
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-green-400 text-sm">✓ Изображение загружено</span>
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                        className="text-red-400 text-sm underline"
-                      >
-                        Удалить
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {/* Автоматическое получение из первого урока */}
-                  {formData.lessons.length > 0 && (
-                    <div className="p-3 bg-dark-200 rounded-lg">
-                      <p className="text-white/70 text-sm mb-2">
-                        💡 Автоматически использовать thumbnail первого урока:
-                      </p>
-                      <button
-                        type="button"
-                        onClick={updateCourseImageFromFirstLesson}
-                        className="px-3 py-1 bg-primary-600 text-white rounded text-sm hover:bg-primary-700"
-                      >
-                        Получить из YouTube
-                      </button>
-                    </div>
                   )}
-
-                  {/* Ручная загрузка */}
-                  <div>
-                    <input
-                      type="file"
-                      onChange={handleImageUpload}
-                      accept="image/*"
-                      className="hidden"
-                      id="course-image-upload"
-                    />
-                    <label
-                      htmlFor="course-image-upload"
-                      className="inline-block px-4 py-2 bg-dark-300 border border-white/10 rounded text-white cursor-pointer hover:bg-dark-200"
-                    >
-                      {uploading ? t.uploading : t.uploadImage}
-                    </label>
-                  </div>
-
-                  {/* Ручной ввод URL */}
-                  <div>
-                    <input
-                      type="url"
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                      placeholder="Или введите URL изображения"
-                      className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                    />
-                  </div>
                 </div>
               </div>
 
               {/* Настройки публикации */}
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2">
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={formData.published}
                     onChange={(e) => setFormData(prev => ({ ...prev, published: e.target.checked }))}
-                    className="w-4 h-4 text-primary-600 border-white/20 rounded focus:ring-primary-500"
+                    className="rounded"
                   />
                   <span className="text-white">{t.published_label}</span>
                 </label>
-
-                <label className="flex items-center gap-2">
+                
+                <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={formData.featured}
                     onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
-                    className="w-4 h-4 text-primary-600 border-white/20 rounded focus:ring-primary-500"
+                    className="rounded"
                   />
                   <span className="text-white">{t.featured}</span>
                 </label>
               </div>
 
-              {/* УЛУЧШЕННОЕ УПРАВЛЕНИЕ УРОКАМИ */}
+              {/* Управление уроками */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-white">{t.lessons_management}</h3>
                   <button
                     type="button"
                     onClick={addLesson}
-                    className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
+                    className="btn-secondary px-4 py-2"
                   >
                     {t.addLesson}
                   </button>
                 </div>
-
+                
                 <div className="space-y-4">
-                  {formData.lessons.map((lesson, index) => {
-                    const thumbnail = lesson.videoUrl ? getVideoThumbnail(lesson.videoUrl) : null
-                    
-                    return (
-                      <div key={lesson.id} className="bg-dark-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-white font-medium">Урок {lesson.order}</h4>
-                          <button
-                            type="button"
-                            onClick={() => removeLesson(lesson.id)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            Удалить
-                          </button>
+                  {formData.lessons.map((lesson, index) => (
+                    <div key={lesson.id} className="bg-dark-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-white font-medium">Урок {index + 1}</h4>
+                        <button
+                          type="button"
+                          onClick={() => removeLesson(lesson.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-white/70 mb-1">{t.lessonTitle} (RU)</label>
+                          <input
+                            type="text"
+                            value={lesson.title.ru}
+                            onChange={(e) => updateLesson(lesson.id, {
+                              title: { ...lesson.title, ru: e.target.value }
+                            })}
+                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                          />
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <label className="block text-white/70 mb-1">{t.lessonTitle} (RU)</label>
-                            <input
-                              type="text"
-                              value={lesson.title.ru}
-                              onChange={(e) => updateLesson(lesson.id, { 
-                                title: { ...lesson.title, ru: e.target.value } 
-                              })}
-                              className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-white/70 mb-1">{t.lessonTitle} (EN)</label>
-                            <input
-                              type="text"
-                              value={lesson.title.en}
-                              onChange={(e) => updateLesson(lesson.id, { 
-                                title: { ...lesson.title, en: e.target.value } 
-                              })}
-                              className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                              required
-                            />
-                          </div>
+                        
+                        <div>
+                          <label className="block text-white/70 mb-1">{t.lessonTitle} (EN)</label>
+                          <input
+                            type="text"
+                            value={lesson.title.en}
+                            onChange={(e) => updateLesson(lesson.id, {
+                              title: { ...lesson.title, en: e.target.value }
+                            })}
+                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                          />
                         </div>
-
-                        {/* YouTube URL с превью */}
-                        <div className="mb-4">
+                        
+                        <div>
                           <label className="block text-white/70 mb-1">{t.videoUrl}</label>
                           <input
                             type="url"
@@ -808,74 +720,42 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                             className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
                             placeholder="https://youtube.com/watch?v=..."
                           />
-                          
-                          {/* Превью thumbnail */}
-                          {thumbnail && (
-                            <div className="mt-2 flex items-center gap-3">
-                              <img 
-                                src={thumbnail} 
-                                alt="Video thumbnail" 
-                                className="w-20 h-12 object-cover rounded"
-                              />
-                              <span className="text-green-400 text-sm">✓ YouTube thumbnail найден</span>
-                            </div>
-                          )}
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-white/70 mb-1">{t.duration}</label>
-                            <input
-                              type="number"
-                              value={lesson.duration || ''}
-                              onChange={(e) => updateLesson(lesson.id, { duration: Number(e.target.value) })}
-                              className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                              placeholder="Минуты"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-white/70 mb-1">{t.order}</label>
-                            <input
-                              type="number"
-                              value={lesson.order}
-                              onChange={(e) => updateLesson(lesson.id, { order: Number(e.target.value) })}
-                              className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                              min="1"
-                            />
-                          </div>
+                        
+                        <div>
+                          <label className="block text-white/70 mb-1">{t.duration}</label>
+                          <input
+                            type="number"
+                            value={lesson.duration || ''}
+                            onChange={(e) => updateLesson(lesson.id, { duration: Number(e.target.value) })}
+                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
+                          />
                         </div>
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
                 </div>
-
-                {formData.lessons.length === 0 && (
-                  <p className="text-white/50 text-center py-8">
-                    Нет уроков. Нажмите "{t.addLesson}" чтобы создать первый урок.
-                  </p>
-                )}
               </div>
 
               {/* Кнопки */}
-              <div className="flex items-center gap-4">
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className="px-6 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
-                >
-                  {showCreateModal ? t.create : t.save}
-                </button>
+              <div className="flex justify-end space-x-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false)
                     setShowEditModal(false)
+                    setEditingCourse(null)
                     resetForm()
                   }}
-                  className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                  className="btn-secondary px-6 py-3"
                 >
                   {t.cancel}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary px-6 py-3"
+                >
+                  {editingCourse ? t.save : t.create}
                 </button>
               </div>
             </form>

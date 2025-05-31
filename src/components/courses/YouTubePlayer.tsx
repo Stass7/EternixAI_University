@@ -2,11 +2,39 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { extractYouTubeVideoId } from '@/utils/youtube'
 
 type YouTubePlayerProps = {
   videoId: string
   title: string
+}
+
+// Извлекает ID видео из разных форматов ссылок YouTube
+function extractYouTubeVideoId(url: string): string {
+  if (!url) return '';
+  
+  // Поддержка форматов:
+  // - https://www.youtube.com/watch?v=VIDEO_ID
+  // - https://youtu.be/VIDEO_ID
+  // - https://youtube.com/shorts/VIDEO_ID
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^?&]+)/i,
+    /^[a-zA-Z0-9_-]{11}$/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  // Если передан уже ID видео (11 символов)
+  if (url.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(url)) {
+    return url;
+  }
+  
+  return '';
 }
 
 export default function YouTubePlayer({ videoId: rawVideoId, title }: YouTubePlayerProps) {
