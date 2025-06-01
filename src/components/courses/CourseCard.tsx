@@ -16,8 +16,8 @@ export default function CourseCard({ course, locale, index = 0 }: CourseCardProp
   const [isHovered, setIsHovered] = useState(false)
   
   // Получаем заголовок и описание для текущей локали
-  const title = course.title[locale] || course.title['en'] || 'Course'
-  const description = course.description[locale] || course.description['en'] || ''
+  const title = course.title[locale as 'ru' | 'en'] || course.title.en || 'Course'
+  const description = course.description[locale as 'ru' | 'en'] || course.description.en || ''
   
   // Форматируем цену в зависимости от локали
   const formatPrice = (price: number) => {
@@ -39,7 +39,7 @@ export default function CourseCard({ course, locale, index = 0 }: CourseCardProp
     >
       <div className="aspect-video relative">
         <Image 
-          src={course.coverImage || `/images/course-placeholder.jpg`}
+          src={course.imageUrl || `/images/course-placeholder.jpg`}
           alt={title}
           fill
           className={`object-cover transition-transform duration-500 ${isHovered ? 'scale-105' : 'scale-100'}`}
@@ -61,7 +61,7 @@ export default function CourseCard({ course, locale, index = 0 }: CourseCardProp
             {formatPrice(course.price)}
             {course.discount && course.discount > 0 && (
               <span className="ml-2 text-white/40 text-sm line-through">
-                {formatPrice(course.price / (1 - (course.discount || 0) / 100))}
+                {formatPrice(course.originalPrice)}
               </span>
             )}
           </span>

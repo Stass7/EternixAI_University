@@ -2,30 +2,34 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 // Интерфейс для типизации урока
 interface ILesson {
-  title: string;
-  description: string;
-  videoUrl: string;
-  duration: number; // в минутах
+  id: string;
+  title: { ru: string; en: string };
+  description?: { ru: string; en: string };
+  videoUrl?: string;
+  duration?: number; // в минутах
   order: number;
 }
 
 const LessonSchema = new Schema({
-  title: { 
+  id: { 
     type: String, 
     required: true,
-    trim: true,
   },
-  description: { 
-    type: String, 
-    required: true,
+  title: { 
+    ru: { type: String, required: true },
+    en: { type: String, required: true }
+  },
+  description: {
+    ru: { type: String, default: '' },
+    en: { type: String, default: '' }
   },
   videoUrl: { 
     type: String, 
-    required: true,
+    default: '',
   },
   duration: { 
     type: Number, 
-    required: true,
+    default: 0,
   },
   order: { 
     type: Number, 
@@ -35,16 +39,16 @@ const LessonSchema = new Schema({
 
 // Интерфейс для типизации модели курса
 export interface ICourse extends Document {
-  title: { [key: string]: string }; // Мультиязычность: { ru: 'Название', en: 'Title' }
-  slug: string;
-  description: { [key: string]: string };
+  title: { ru: string; en: string };
+  description: { ru: string; en: string };
   category: string;
   price: number;
-  discount?: number;
-  coverImage: string;
+  originalPrice: number;
+  discount: number;
+  imageUrl: string;
   lessons: ILesson[];
   published: boolean;
-  createdBy: mongoose.Types.ObjectId;
+  featured: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,21 +57,12 @@ export interface ICourse extends Document {
 const CourseSchema = new Schema<ICourse>(
   {
     title: { 
-      type: Map,
-      of: String,
-      required: true,
-    },
-    slug: { 
-      type: String, 
-      required: true, 
-      unique: true,
-      trim: true,
-      lowercase: true,
+      ru: { type: String, required: true },
+      en: { type: String, required: true }
     },
     description: { 
-      type: Map,
-      of: String,
-      required: true,
+      ru: { type: String, required: true },
+      en: { type: String, required: true }
     },
     category: { 
       type: String, 
@@ -77,23 +72,26 @@ const CourseSchema = new Schema<ICourse>(
       type: Number, 
       required: true,
     },
+    originalPrice: { 
+      type: Number, 
+      required: true,
+    },
     discount: { 
       type: Number,
       default: 0,
     },
-    coverImage: { 
+    imageUrl: { 
       type: String, 
-      required: true,
+      default: '/images/course-placeholder.jpg',
     },
     lessons: [LessonSchema],
     published: { 
       type: Boolean, 
       default: false,
     },
-    createdBy: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'User',
-      required: true,
+    featured: { 
+      type: Boolean, 
+      default: false,
     },
   },
   { 

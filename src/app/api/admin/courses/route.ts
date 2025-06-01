@@ -118,30 +118,58 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
-      price,
       originalPrice,
+      price,
       category,
       imageUrl,
-      published = false,
+      published = true, // Автоматически публикуем
       featured = false,
       lessons = []
     } = body
 
-    // Валидация обязательных полей
-    if (!title?.ru || !title?.en || !description?.ru || !description?.en || !price || !category) {
+    // Новая валидация: хотя бы один язык должен быть заполнен
+    const hasTitle = (title?.ru && title.ru.trim()) || (title?.en && title.en.trim())
+    const hasDescription = (description?.ru && description.ru.trim()) || (description?.en && description.en.trim())
+    
+    if (!hasTitle) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Title in at least one language is required' },
+        { status: 400 }
+      )
+    }
+    
+    if (!hasDescription) {
+      return NextResponse.json(
+        { error: 'Description in at least one language is required' },
+        { status: 400 }
+      )
+    }
+    
+    if (!originalPrice || !category) {
+      return NextResponse.json(
+        { error: 'Original price and category are required' },
         { status: 400 }
       )
     }
 
+    // Заполняем пустые языки, если не указаны
+    const courseTitle = {
+      ru: title?.ru?.trim() || title?.en?.trim() || '',
+      en: title?.en?.trim() || title?.ru?.trim() || ''
+    }
+    
+    const courseDescription = {
+      ru: description?.ru?.trim() || description?.en?.trim() || '',
+      en: description?.en?.trim() || description?.ru?.trim() || ''
+    }
+
     // Создаем новый курс
     const course = new Course({
-      title,
-      description,
-      price: Number(price),
-      originalPrice: originalPrice ? Number(originalPrice) : Number(price),
-      discount: originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
+      title: courseTitle,
+      description: courseDescription,
+      originalPrice: Number(originalPrice),
+      price: price ? Number(price) : Number(originalPrice),
+      discount: price && price < originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
       category,
       imageUrl: imageUrl || '/images/course-placeholder.jpg',
       published,
