@@ -44,6 +44,7 @@ export async function GET(
       _id: course._id.toString(),
       title: course.title,
       description: course.description,
+      language: course.language,
       price: course.price,
       originalPrice: course.originalPrice,
       discount: course.discount,
@@ -51,9 +52,13 @@ export async function GET(
       imageUrl: course.imageUrl,
       published: course.published,
       featured: course.featured,
+      isNew: course.isNew,
+      newUntil: course.newUntil,
+      publishedAt: course.publishedAt,
       lessons: course.lessons || [],
       createdAt: course.createdAt,
-      updatedAt: course.updatedAt
+      updatedAt: course.updatedAt,
+      isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
     })
   } catch (error) {
     console.error('Admin course GET error:', error)
@@ -94,58 +99,48 @@ export async function PUT(
     const {
       title,
       description,
+      language,
       originalPrice,
       price,
       category,
       imageUrl,
       published,
       featured,
+      isNew,
+      newUntil,
       lessons
     } = body
 
-    // Новая валидация: хотя бы один язык должен быть заполнен
-    const hasTitle = (title?.ru && title.ru.trim()) || (title?.en && title.en.trim())
-    const hasDescription = (description?.ru && description.ru.trim()) || (description?.en && description.en.trim())
-    
-    if (!hasTitle) {
+    // Валидация обязательных полей
+    if (!title?.trim()) {
       return NextResponse.json(
-        { error: 'Title in at least one language is required' },
+        { error: 'Title is required' },
         { status: 400 }
       )
     }
     
-    if (!hasDescription) {
+    if (!description?.trim()) {
       return NextResponse.json(
-        { error: 'Description in at least one language is required' },
+        { error: 'Description is required' },
         { status: 400 }
       )
     }
     
-    if (!originalPrice || !category) {
+    if (!originalPrice || !category || !language) {
       return NextResponse.json(
-        { error: 'Original price and category are required' },
+        { error: 'Original price, category and language are required' },
         { status: 400 }
       )
-    }
-
-    // Заполняем пустые языки, если не указаны
-    const courseTitle = {
-      ru: title?.ru?.trim() || title?.en?.trim() || '',
-      en: title?.en?.trim() || title?.ru?.trim() || ''
-    }
-    
-    const courseDescription = {
-      ru: description?.ru?.trim() || description?.en?.trim() || '',
-      en: description?.en?.trim() || description?.ru?.trim() || ''
     }
 
     const updateData: any = {
-      title: courseTitle,
-      description: courseDescription,
+      title: title.trim(),
+      description: description.trim(),
+      language,
       originalPrice: Number(originalPrice),
       price: price ? Number(price) : Number(originalPrice),
       category,
-      published: published !== undefined ? published : true,
+      published: published !== undefined ? published : false,
       featured: featured !== undefined ? featured : false,
       updatedAt: new Date()
     }
@@ -167,6 +162,27 @@ export async function PUT(
       updateData.lessons = lessons
     }
 
+    // Управление метками "новый"
+    if (isNew !== undefined) {
+      updateData.isNew = isNew
+      if (isNew && newUntil) {
+        updateData.newUntil = new Date(newUntil)
+      } else if (isNew && !newUntil) {
+        // Если помечаем как новый без даты, ставим 30 дней
+        updateData.newUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    }
+
+    // Обновляем дату публикации при изменении статуса
+    if (published !== undefined) {
+      const existingCourse = await Course.findById(params.courseId)
+      if (existingCourse && !existingCourse.published && published) {
+        updateData.publishedAt = new Date()
+      } else if (!published) {
+        updateData.publishedAt = null
+      }
+    }
+
     const course = await Course.findByIdAndUpdate(
       params.courseId,
       updateData,
@@ -186,6 +202,7 @@ export async function PUT(
         _id: course._id.toString(),
         title: course.title,
         description: course.description,
+        language: course.language,
         price: course.price,
         originalPrice: course.originalPrice,
         discount: course.discount,
@@ -193,9 +210,13 @@ export async function PUT(
         imageUrl: course.imageUrl,
         published: course.published,
         featured: course.featured,
+        isNew: course.isNew,
+        newUntil: course.newUntil,
+        publishedAt: course.publishedAt,
         lessonsCount: course.lessons?.length || 0,
         createdAt: course.createdAt,
-        updatedAt: course.updatedAt
+        updatedAt: course.updatedAt,
+        isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
       }
     })
   } catch (error) {

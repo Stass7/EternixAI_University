@@ -33,21 +33,25 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || 'all' // all, published, draft
+    const language = searchParams.get('language') || 'all' // all, ru, en
 
     // Построение фильтра поиска
     let filter: any = {}
     
     if (search) {
       filter.$or = [
-        { 'title.ru': { $regex: search, $options: 'i' } },
-        { 'title.en': { $regex: search, $options: 'i' } },
-        { 'description.ru': { $regex: search, $options: 'i' } },
-        { 'description.en': { $regex: search, $options: 'i' } }
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
       ]
     }
 
     if (status !== 'all') {
       filter.published = status === 'published'
+    }
+
+    if (language !== 'all') {
+      filter.language = language
     }
 
     // Получаем курсы с пагинацией
@@ -65,6 +69,7 @@ export async function GET(request: NextRequest) {
         _id: (course._id as Types.ObjectId).toString(),
         title: course.title,
         description: course.description,
+        language: course.language,
         price: course.price,
         originalPrice: course.originalPrice,
         discount: course.discount,
@@ -72,9 +77,13 @@ export async function GET(request: NextRequest) {
         imageUrl: course.imageUrl,
         published: course.published,
         featured: course.featured,
+        isNew: course.isNew,
+        newUntil: course.newUntil,
+        publishedAt: course.publishedAt,
         lessonsCount: course.lessons?.length || 0,
         createdAt: course.createdAt,
-        updatedAt: course.updatedAt
+        updatedAt: course.updatedAt,
+        isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
       })),
       pagination: {
         total: totalCourses,
@@ -118,63 +127,52 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
+      language,
       originalPrice,
       price,
       category,
       imageUrl,
-      published = true, // Автоматически публикуем
-      featured = false,
       lessons = []
     } = body
 
-    // Новая валидация: хотя бы один язык должен быть заполнен
-    const hasTitle = (title?.ru && title.ru.trim()) || (title?.en && title.en.trim())
-    const hasDescription = (description?.ru && description.ru.trim()) || (description?.en && description.en.trim())
-    
-    if (!hasTitle) {
+    // Валидация обязательных полей
+    if (!title?.trim()) {
       return NextResponse.json(
-        { error: 'Title in at least one language is required' },
+        { error: 'Title is required' },
         { status: 400 }
       )
     }
     
-    if (!hasDescription) {
+    if (!description?.trim()) {
       return NextResponse.json(
-        { error: 'Description in at least one language is required' },
+        { error: 'Description is required' },
         { status: 400 }
       )
     }
     
-    if (!originalPrice || !category) {
+    if (!originalPrice || !category || !language) {
       return NextResponse.json(
-        { error: 'Original price and category are required' },
+        { error: 'Original price, category and language are required' },
         { status: 400 }
       )
-    }
-
-    // Заполняем пустые языки, если не указаны
-    const courseTitle = {
-      ru: title?.ru?.trim() || title?.en?.trim() || '',
-      en: title?.en?.trim() || title?.ru?.trim() || ''
-    }
-    
-    const courseDescription = {
-      ru: description?.ru?.trim() || description?.en?.trim() || '',
-      en: description?.en?.trim() || description?.ru?.trim() || ''
     }
 
     // Создаем новый курс
     const course = new Course({
-      title: courseTitle,
-      description: courseDescription,
+      title: title.trim(),
+      description: description.trim(),
+      language,
       originalPrice: Number(originalPrice),
       price: price ? Number(price) : Number(originalPrice),
       discount: price && price < originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
       category,
       imageUrl: imageUrl || '/images/course-placeholder.jpg',
-      published,
-      featured,
-      lessons
+      published: false, // По умолчанию черновик
+      featured: false,
+      lessons,
+      isNew: true, // Новые курсы помечаются как новые
+      newUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
+      publishedAt: null
     })
 
     await course.save()
@@ -185,6 +183,7 @@ export async function POST(request: NextRequest) {
         _id: course._id.toString(),
         title: course.title,
         description: course.description,
+        language: course.language,
         price: course.price,
         originalPrice: course.originalPrice,
         discount: course.discount,
@@ -192,9 +191,13 @@ export async function POST(request: NextRequest) {
         imageUrl: course.imageUrl,
         published: course.published,
         featured: course.featured,
+        isNew: course.isNew,
+        newUntil: course.newUntil,
+        publishedAt: course.publishedAt,
         lessonsCount: course.lessons?.length || 0,
         createdAt: course.createdAt,
-        updatedAt: course.updatedAt
+        updatedAt: course.updatedAt,
+        isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
       }
     })
   } catch (error) {
