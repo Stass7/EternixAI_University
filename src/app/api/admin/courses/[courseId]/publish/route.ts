@@ -8,10 +8,10 @@ import Course from '@/models/Course'
 // POST - переключить статус публикации курса
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ courseId: string }> }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const params = await context.params
+    const { courseId } = await params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -31,7 +31,7 @@ export async function POST(
       )
     }
 
-    const course = await Course.findById(params.courseId)
+    const course = await Course.findById(courseId)
     
     if (!course) {
       return NextResponse.json(
@@ -55,7 +55,7 @@ export async function POST(
     }
 
     const updatedCourse = await Course.findByIdAndUpdate(
-      params.courseId,
+      courseId,
       updateData,
       { new: true }
     )

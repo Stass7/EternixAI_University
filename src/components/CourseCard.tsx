@@ -15,7 +15,7 @@ interface Course {
   imageUrl: string
   published: boolean
   featured: boolean
-  isNew: boolean
+  isNewCourse: boolean
   newUntil: string
   publishedAt: string | null
   lessonsCount: number
@@ -109,7 +109,7 @@ export default function CourseCard({ course, locale }: CourseCardProps) {
         {/* Категория */}
         <div className="mb-4">
           <span className="inline-block px-3 py-1 bg-primary-500/20 text-primary-300 rounded-full text-sm">
-            📚 {course.category}
+            �� {course.category}
           </span>
         </div>
 

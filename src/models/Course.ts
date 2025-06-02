@@ -8,7 +8,7 @@ interface ILesson {
   videoUrl?: string;
   duration?: number; // в минутах
   order: number;
-  isNew: boolean; // Метка "новый урок"
+  isNewLesson: boolean; // Метка "новый урок" (переименовано)
   newUntil: Date; // До какой даты считается новым
 }
 
@@ -38,7 +38,7 @@ const LessonSchema = new Schema({
     type: Number, 
     required: true,
   },
-  isNew: {
+  isNewLesson: {
     type: Boolean,
     default: true,
   },
@@ -61,7 +61,7 @@ export interface ICourse extends Document {
   lessons: ILesson[];
   published: boolean; // Статус публикации
   featured: boolean; // Рекомендуемый
-  isNew: boolean; // Метка "новый курс"
+  isNewCourse: boolean; // Метка "новый курс" (переименовано)
   newUntil: Date; // До какой даты считается новым
   publishedAt: Date | null; // Дата публикации
   createdAt: Date;
@@ -120,7 +120,7 @@ const CourseSchema = new Schema(
       type: Boolean, 
       default: false,
     },
-    isNew: {
+    isNewCourse: {
       type: Boolean,
       default: true,
     },
@@ -148,7 +148,7 @@ CourseSchema.pre('save', function(next) {
 
 // Виртуальное поле для проверки истечения срока "новый"
 CourseSchema.virtual('isStillNew').get(function() {
-  if (!this.isNew || !this.newUntil) return false
+  if (!this.isNewCourse || !this.newUntil) return false
   return this.newUntil > new Date()
 })
 

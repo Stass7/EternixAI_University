@@ -77,13 +77,13 @@ export async function GET(request: NextRequest) {
         imageUrl: course.imageUrl,
         published: course.published,
         featured: course.featured,
-        isNew: course.isNew,
+        isNewCourse: course.isNewCourse,
         newUntil: course.newUntil,
         publishedAt: course.publishedAt,
         lessonsCount: course.lessons?.length || 0,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
-        isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
+        isStillNew: course.isNewCourse && course.newUntil && course.newUntil > new Date()
       })),
       pagination: {
         total: totalCourses,
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       published: false, // По умолчанию черновик
       featured: false,
       lessons,
-      isNew: true, // Новые курсы помечаются как новые
+      isNewCourse: true, // Новые курсы помечаются как новые
       newUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
       publishedAt: null
     })
@@ -191,13 +191,13 @@ export async function POST(request: NextRequest) {
         imageUrl: course.imageUrl,
         published: course.published,
         featured: course.featured,
-        isNew: course.isNew,
+        isNewCourse: course.isNewCourse,
         newUntil: course.newUntil,
         publishedAt: course.publishedAt,
         lessonsCount: course.lessons?.length || 0,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
-        isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
+        isStillNew: course.isNewCourse && course.newUntil && course.newUntil > new Date()
       }
     })
   } catch (error) {

@@ -4,14 +4,15 @@ import { authOptions } from '@/lib/auth/config'
 import connectToDatabase from '@/lib/db/mongodb'
 import User from '@/models/User'
 import Course from '@/models/Course'
+import { Types } from 'mongoose'
 
-// GET - получить конкретный курс
+// GET - получить курс по ID
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ courseId: string }> }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const params = await context.params
+    const { courseId } = await params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -31,7 +32,14 @@ export async function GET(
       )
     }
 
-    const course = await Course.findById(params.courseId)
+    if (!Types.ObjectId.isValid(courseId)) {
+      return NextResponse.json(
+        { error: 'Invalid course ID' },
+        { status: 400 }
+      )
+    }
+
+    const course: any = await Course.findById(courseId).lean()
     
     if (!course) {
       return NextResponse.json(
@@ -52,13 +60,13 @@ export async function GET(
       imageUrl: course.imageUrl,
       published: course.published,
       featured: course.featured,
-      isNew: course.isNew,
+      isNewCourse: course.isNewCourse,
       newUntil: course.newUntil,
       publishedAt: course.publishedAt,
       lessons: course.lessons || [],
       createdAt: course.createdAt,
       updatedAt: course.updatedAt,
-      isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
+      isStillNew: course.isNewCourse && course.newUntil && course.newUntil > new Date()
     })
   } catch (error) {
     console.error('Admin course GET error:', error)
@@ -72,10 +80,10 @@ export async function GET(
 // PUT - обновить курс
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ courseId: string }> }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const params = await context.params
+    const { courseId } = await params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -95,6 +103,13 @@ export async function PUT(
       )
     }
 
+    if (!Types.ObjectId.isValid(courseId)) {
+      return NextResponse.json(
+        { error: 'Invalid course ID' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const {
       title,
@@ -106,9 +121,9 @@ export async function PUT(
       imageUrl,
       published,
       featured,
-      isNew,
+      isNewCourse,
       newUntil,
-      lessons
+      lessons = []
     } = body
 
     // Валидация обязательных полей
@@ -133,6 +148,7 @@ export async function PUT(
       )
     }
 
+    // Подготавливаем данные для обновления
     const updateData: any = {
       title: title.trim(),
       description: description.trim(),
@@ -140,53 +156,43 @@ export async function PUT(
       originalPrice: Number(originalPrice),
       price: price ? Number(price) : Number(originalPrice),
       category,
-      published: published !== undefined ? published : false,
-      featured: featured !== undefined ? featured : false,
-      updatedAt: new Date()
+      imageUrl: imageUrl || '/images/course-placeholder.jpg',
+      lessons
     }
 
-    // Пересчитываем скидку
-    if (price && price < originalPrice) {
-      updateData.discount = Math.round(((originalPrice - price) / originalPrice) * 100)
-    } else {
-      updateData.discount = 0
+    // Обновляем статус публикации если передан
+    if (typeof published === 'boolean') {
+      updateData.published = published
     }
 
-    // Обновляем изображение если предоставлено
-    if (imageUrl) {
-      updateData.imageUrl = imageUrl
+    // Обновляем featured если передан
+    if (typeof featured === 'boolean') {
+      updateData.featured = featured
     }
 
-    // Обновляем уроки если предоставлены
-    if (lessons) {
-      updateData.lessons = lessons
-    }
-
-    // Управление метками "новый"
-    if (isNew !== undefined) {
-      updateData.isNew = isNew
-      if (isNew && newUntil) {
-        updateData.newUntil = new Date(newUntil)
-      } else if (isNew && !newUntil) {
-        // Если помечаем как новый без даты, ставим 30 дней
-        updateData.newUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    // Обновляем статус "новый" если передан
+    if (typeof isNewCourse === 'boolean') {
+      updateData.isNewCourse = isNewCourse
+      
+      // Если включаем статус "новый", устанавливаем или обновляем дату
+      if (isNewCourse) {
+        updateData.newUntil = newUntil ? new Date(newUntil) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      } else {
+        updateData.newUntil = null
       }
     }
 
-    // Обновляем дату публикации при изменении статуса
-    if (published !== undefined) {
-      const existingCourse = await Course.findById(params.courseId)
-      if (existingCourse && !existingCourse.published && published) {
-        updateData.publishedAt = new Date()
-      } else if (!published) {
-        updateData.publishedAt = null
-      }
-    }
+    // Вычисляем скидку
+    const calculatedDiscount = updateData.price < updateData.originalPrice 
+      ? Math.round(((updateData.originalPrice - updateData.price) / updateData.originalPrice) * 100)
+      : 0
+    
+    updateData.discount = calculatedDiscount
 
-    const course = await Course.findByIdAndUpdate(
-      params.courseId,
+    const course: any = await Course.findByIdAndUpdate(
+      courseId,
       updateData,
-      { new: true }
+      { new: true, runValidators: true }
     )
 
     if (!course) {
@@ -210,13 +216,13 @@ export async function PUT(
         imageUrl: course.imageUrl,
         published: course.published,
         featured: course.featured,
-        isNew: course.isNew,
+        isNewCourse: course.isNewCourse,
         newUntil: course.newUntil,
         publishedAt: course.publishedAt,
         lessonsCount: course.lessons?.length || 0,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
-        isStillNew: course.isNew && course.newUntil && course.newUntil > new Date()
+        isStillNew: course.isNewCourse && course.newUntil && course.newUntil > new Date()
       }
     })
   } catch (error) {
@@ -231,10 +237,10 @@ export async function PUT(
 // DELETE - удалить курс
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ courseId: string }> }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const params = await context.params
+    const { courseId } = await params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -254,7 +260,14 @@ export async function DELETE(
       )
     }
 
-    const course = await Course.findByIdAndDelete(params.courseId)
+    if (!Types.ObjectId.isValid(courseId)) {
+      return NextResponse.json(
+        { error: 'Invalid course ID' },
+        { status: 400 }
+      )
+    }
+
+    const course = await Course.findByIdAndDelete(courseId)
     
     if (!course) {
       return NextResponse.json(

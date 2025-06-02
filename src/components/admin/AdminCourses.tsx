@@ -19,7 +19,7 @@ interface Course {
   imageUrl: string
   published: boolean
   featured: boolean
-  isNew: boolean
+  isNewCourse: boolean
   newUntil: string
   publishedAt: string | null
   lessonsCount: number
@@ -78,7 +78,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     price: '',
     category: '',
     imageUrl: '',
-    isNew: true,
+    isNewCourse: true,
     newUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     lessons: [] as Lesson[]
   })
@@ -183,7 +183,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
         imageUrl: formData.imageUrl || '/images/course-placeholder.jpg',
         published: false, // Создаем как черновик
         featured: false,
-        isNew: formData.isNew,
+        isNewCourse: formData.isNewCourse,
         newUntil: formData.newUntil,
         lessons: formData.lessons
       }
@@ -234,7 +234,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
           price: data.price !== data.originalPrice ? data.price.toString() : '',
           category: data.category,
           imageUrl: data.imageUrl,
-          isNew: data.isNew,
+          isNewCourse: data.isNewCourse,
           newUntil: new Date(data.newUntil).toISOString().split('T')[0],
           lessons: data.lessons || []
         })
@@ -301,7 +301,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
           imageUrl: course.imageUrl,
           published: course.published,
           featured: course.featured,
-          isNew: !currentIsNew,
+          isNewCourse: !currentIsNew,
           newUntil: !currentIsNew ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
           lessons: []
         })
@@ -325,7 +325,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       price: '',
       category: '',
       imageUrl: '',
-      isNew: true,
+      isNewCourse: true,
       newUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       lessons: []
     })
@@ -548,7 +548,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                               🔥 Хит
                             </span>
                           )}
-                          {course.isNew && (
+                          {course.isNewCourse && (
                             <span className="text-white/50 text-xs">
                               до {formatDate(course.newUntil)}
                             </span>
@@ -571,14 +571,14 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                             {course.published ? 'Снять' : 'Опубликовать'}
                           </button>
                           <button
-                            onClick={() => toggleNew(course._id, course.isNew)}
+                            onClick={() => toggleNew(course._id, course.isNewCourse)}
                             className={`px-3 py-1 rounded text-xs ${
-                              course.isNew
+                              course.isNewCourse
                                 ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30'
                                 : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
                             }`}
                           >
-                            {course.isNew ? 'Убрать NEW' : 'Пометить NEW'}
+                            {course.isNewCourse ? 'Убрать NEW' : 'Пометить NEW'}
                           </button>
                           <button
                             onClick={() => handleEdit(course)}
@@ -767,15 +767,15 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={formData.isNew}
-                      onChange={(e) => setFormData(prev => ({ ...prev, isNew: e.target.checked }))}
+                      checked={formData.isNewCourse}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isNewCourse: e.target.checked }))}
                       className="w-5 h-5 text-primary-500"
                     />
                     <span className="text-white/70">Пометить как новый курс</span>
                   </label>
                 </div>
                 
-                {formData.isNew && (
+                {formData.isNewCourse && (
                   <div>
                     <label className="block text-white/70 mb-2">Новый до даты</label>
                     <input
