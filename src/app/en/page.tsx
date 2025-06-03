@@ -4,6 +4,31 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ClientMotionWrapper } from '@/components/ui/ClientMotionWrapper'
 
+// SVG заглушки как data URLs
+const DEFAULT_HERO_IMAGE = "data:image/svg+xml;base64," + btoa(`
+<svg width="800" height="450" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#1e293b"/>
+  <text x="50%" y="45%" font-family="Arial, sans-serif" font-size="24" fill="#64748b" text-anchor="middle">
+    Hero Image
+  </text>
+  <text x="50%" y="55%" font-family="Arial, sans-serif" font-size="16" fill="#475569" text-anchor="middle">
+    Upload image in admin panel
+  </text>
+</svg>
+`)
+
+const DEFAULT_COURSE_PLACEHOLDER = "data:image/svg+xml;base64," + btoa(`
+<svg width="400" height="225" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#374151"/>
+  <text x="50%" y="45%" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af" text-anchor="middle">
+    Course Image
+  </text>
+  <text x="50%" y="60%" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">
+    Upload in admin panel
+  </text>
+</svg>
+`)
+
 // Интерфейсы для типизации
 interface SiteSettings {
   siteName: string
@@ -44,12 +69,19 @@ async function getSiteSettings(): Promise<SiteSettings> {
     console.error('Error fetching site settings:', error)
   }
   
-  // Fallback настройки в случае ошибки
+  // Fallback настройки с SVG заглушками
   return {
     siteName: 'EternixAI University',
     siteDescription: 'Educational platform with video courses',
-    heroImage: '/images/hero-image.jpg',
-    logo: '/images/logo.png',
+    heroImage: DEFAULT_HERO_IMAGE,
+    logo: "data:image/svg+xml;base64," + btoa(`
+      <svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#0ea5e9"/>
+        <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" dy=".3em">
+          LOGO
+        </text>
+      </svg>
+    `),
     primaryColor: '#0ea5e9',
     secondaryColor: '#64748b',
     language: 'en'
@@ -230,7 +262,7 @@ export default async function HomePage() {
                 >
                   <div className="aspect-video relative">
                     <Image 
-                      src={course.imageUrl || `/images/course-placeholder.jpg`} 
+                      src={course.imageUrl || DEFAULT_COURSE_PLACEHOLDER} 
                       alt={course.title} 
                       fill
                       className="object-cover"
