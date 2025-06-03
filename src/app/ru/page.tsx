@@ -50,7 +50,7 @@ interface Course {
   originalPrice: number
   discount: number
   category: string
-  lessons: any[]
+  lessonsCount: number
   isNewCourse: boolean
 }
 
@@ -280,7 +280,7 @@ export default async function HomePage() {
                         {course.category}
                       </span>
                       <span className="text-white/60 text-sm">
-                        {course.lessons.length} уроков
+                        {course.lessonsCount || 0} уроков
                       </span>
                     </div>
                     <h3 className="text-xl font-semibold text-white mt-2 line-clamp-2">
