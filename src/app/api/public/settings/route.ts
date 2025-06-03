@@ -36,6 +36,46 @@ const DEFAULT_COURSE_PLACEHOLDER = "data:image/svg+xml;base64," + btoa(`
 </svg>
 `)
 
+// Функция для проверки и исправления старых путей изображений
+function fixOldImagePaths(settings: any) {
+  let needsUpdate = false
+  const updatedSettings = { ...settings }
+
+  // Список старых путей которые нужно заменить
+  const oldImagePaths = [
+    '/images/hero-image.jpg',
+    '/images/logo.png', 
+    '/images/course-placeholder.jpg',
+    '/hero-image.jpg',
+    '/logo.png',
+    '/course-placeholder.jpg'
+  ]
+
+  // Проверяем и исправляем heroImage
+  if (settings.heroImage && (
+    oldImagePaths.includes(settings.heroImage) || 
+    settings.heroImage.startsWith('/images/') ||
+    !settings.heroImage.startsWith('data:') && !settings.heroImage.startsWith('http') && !settings.heroImage.startsWith('/uploads/')
+  )) {
+    updatedSettings.heroImage = DEFAULT_HERO_IMAGE
+    needsUpdate = true
+    console.log(`Fixed old heroImage path: ${settings.heroImage} -> SVG placeholder`)
+  }
+
+  // Проверяем и исправляем logo
+  if (settings.logo && (
+    oldImagePaths.includes(settings.logo) ||
+    settings.logo.startsWith('/images/') ||
+    !settings.logo.startsWith('data:') && !settings.logo.startsWith('http') && !settings.logo.startsWith('/uploads/')
+  )) {
+    updatedSettings.logo = DEFAULT_LOGO
+    needsUpdate = true
+    console.log(`Fixed old logo path: ${settings.logo} -> SVG placeholder`)
+  }
+
+  return { updatedSettings, needsUpdate }
+}
+
 // GET - получить публичные настройки сайта (без авторизации)
 export async function GET() {
   try {
@@ -56,6 +96,17 @@ export async function GET() {
         language: 'ru',
         contactEmail: 'info@eternixai.university'
       })
+      console.log('Created default settings with SVG placeholders')
+    } else {
+      // Проверяем и исправляем старые пути в существующих настройках
+      const { updatedSettings, needsUpdate } = fixOldImagePaths(settings.toObject())
+      
+      if (needsUpdate) {
+        // Обновляем настройки в базе данных
+        await SiteSettings.findByIdAndUpdate(settings._id, updatedSettings)
+        settings = await SiteSettings.findById(settings._id)
+        console.log('Updated settings with corrected image paths')
+      }
     }
 
     // Возвращаем только публичные настройки для отображения
