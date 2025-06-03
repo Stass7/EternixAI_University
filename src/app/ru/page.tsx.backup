@@ -2,9 +2,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ClientMotionWrapper } from '@/components/ui/ClientMotionWrapper'
 
-// Принудительное использование динамического рендеринга
-export const dynamic = 'force-dynamic'
-
 // SVG заглушки как data URLs
 const DEFAULT_HERO_IMAGE = "data:image/svg+xml;base64," + btoa(`
 <svg width="800" height="450" xmlns="http://www.w3.org/2000/svg">

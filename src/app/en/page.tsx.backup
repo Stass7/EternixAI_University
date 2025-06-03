@@ -2,9 +2,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ClientMotionWrapper } from '@/components/ui/ClientMotionWrapper'
 
-// Принудительное использование динамического рендеринга
-export const dynamic = 'force-dynamic'
-
 // SVG заглушки как data URLs
 const DEFAULT_HERO_IMAGE = "data:image/svg+xml;base64," + btoa(`
 <svg width="800" height="450" xmlns="http://www.w3.org/2000/svg">
@@ -73,7 +70,7 @@ async function getSiteSettings(): Promise<SiteSettings> {
   // Fallback настройки с SVG заглушками
   return {
     siteName: 'EternixAI University',
-    siteDescription: 'Образовательная платформа с видео-уроками',
+    siteDescription: 'Educational platform with video courses',
     heroImage: DEFAULT_HERO_IMAGE,
     logo: "data:image/svg+xml;base64," + btoa(`
       <svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">
@@ -85,15 +82,15 @@ async function getSiteSettings(): Promise<SiteSettings> {
     `),
     primaryColor: '#0ea5e9',
     secondaryColor: '#64748b',
-    language: 'ru'
+    language: 'en'
   }
 }
 
-// Функция для получения русских курсов
-async function getRussianCourses(): Promise<Course[]> {
+// Функция для получения английских курсов
+async function getEnglishCourses(): Promise<Course[]> {
   try {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/courses?language=ru&limit=3`, {
+    const response = await fetch(`${baseUrl}/api/courses?language=en&limit=3`, {
       cache: 'no-store', // Всегда получаем свежие курсы
     })
     
@@ -102,7 +99,7 @@ async function getRussianCourses(): Promise<Course[]> {
       return data.courses || []
     }
   } catch (error) {
-    console.error('Error fetching Russian courses:', error)
+    console.error('Error fetching English courses:', error)
   }
   
   return []
@@ -111,7 +108,7 @@ async function getRussianCourses(): Promise<Course[]> {
 export default async function HomePage() {
   const [settings, courses] = await Promise.all([
     getSiteSettings(),
-    getRussianCourses()
+    getEnglishCourses()
   ])
 
   return (
@@ -132,17 +129,17 @@ export default async function HomePage() {
               className="flex flex-col"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Образовательная платформа <span className="text-primary-500">{settings.siteName}</span>
+                Educational Platform <span className="text-primary-500">{settings.siteName}</span>
               </h1>
               <p className="mt-6 text-xl text-white/80">
                 {settings.siteDescription}
               </p>
               <div className="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link href="/ru/courses" className="btn-primary text-center px-8 py-4 text-lg">
-                  Все курсы
+                <Link href="/en/courses" className="btn-primary text-center px-8 py-4 text-lg">
+                  All Courses
                 </Link>
-                <Link href="/ru/pricing" className="btn-secondary text-center px-8 py-4 text-lg">
-                  Тарифы
+                <Link href="/en/pricing" className="btn-secondary text-center px-8 py-4 text-lg">
+                  Pricing
                 </Link>
               </div>
             </ClientMotionWrapper>
@@ -177,7 +174,7 @@ export default async function HomePage() {
               transition={{ duration: 0.5 }}
               className="text-3xl md:text-4xl font-bold text-white"
             >
-              Почему выбирают нас
+              Why Choose Us
             </ClientMotionWrapper>
             <ClientMotionWrapper
               initial={{ opacity: 0, y: 20 }}
@@ -186,25 +183,25 @@ export default async function HomePage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="mt-4 text-lg text-white/70"
             >
-              {settings.siteName} предлагает уникальный подход к образованию с фокусом на качество и результат
+              {settings.siteName} offers a unique approach to education with a focus on quality and results
             </ClientMotionWrapper>
           </div>
           
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: "Качественные видео-уроки",
-                description: "Все материалы записаны профессионалами своего дела с многолетним опытом",
+                title: "Quality Video Lessons",
+                description: "All materials are recorded by professionals with years of experience",
                 icon: "📚"
               },
               {
-                title: "Гибкость обучения",
-                description: "Учитесь в удобное время и в комфортном для вас темпе",
+                title: "Learning Flexibility",
+                description: "Study at a convenient time and at a pace that's comfortable for you",
                 icon: "⏱️"
               },
               {
-                title: "Сертификаты",
-                description: "Получайте сертификаты о прохождении курсов для вашего портфолио",
+                title: "Certificates",
+                description: "Receive certificates for completed courses for your portfolio",
                 icon: "🎓"
               }
             ].map((feature, index) => (
@@ -236,7 +233,7 @@ export default async function HomePage() {
               transition={{ duration: 0.5 }}
               className="text-3xl md:text-4xl font-bold text-white"
             >
-              Популярные курсы
+              Popular Courses
             </ClientMotionWrapper>
             <ClientMotionWrapper
               initial={{ opacity: 0, x: 20 }}
@@ -244,8 +241,8 @@ export default async function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Link href="/ru/courses" className="btn-secondary">
-                Все курсы
+              <Link href="/en/courses" className="btn-secondary">
+                All Courses
               </Link>
             </ClientMotionWrapper>
           </div>
@@ -270,7 +267,7 @@ export default async function HomePage() {
                     />
                     {course.isNewCourse && (
                       <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        НОВЫЙ
+                        NEW
                       </div>
                     )}
                   </div>
@@ -280,7 +277,7 @@ export default async function HomePage() {
                         {course.category}
                       </span>
                       <span className="text-white/60 text-sm">
-                        {course.lessons.length} уроков
+                        {course.lessons.length} lessons
                       </span>
                     </div>
                     <h3 className="text-xl font-semibold text-white mt-2 line-clamp-2">
@@ -291,13 +288,13 @@ export default async function HomePage() {
                     </p>
                     <div className="mt-4 flex justify-between items-center">
                       <div className="flex items-center space-x-2">
-                        <span className="text-primary-500 font-bold">{course.price} ₽</span>
+                        <span className="text-primary-500 font-bold">${course.price}</span>
                         {course.discount > 0 && (
-                          <span className="text-white/50 line-through text-sm">{course.originalPrice} ₽</span>
+                          <span className="text-white/50 line-through text-sm">${course.originalPrice}</span>
                         )}
                       </div>
-                      <Link href={`/ru/courses/${course._id}`} className="btn-primary text-sm">
-                        Подробнее
+                      <Link href={`/en/courses/${course._id}`} className="btn-primary text-sm">
+                        Learn More
                       </Link>
                     </div>
                   </div>
@@ -307,8 +304,8 @@ export default async function HomePage() {
               // Показываем сообщение если нет курсов
               <div className="col-span-3 text-center py-12">
                 <div className="text-4xl mb-4">📚</div>
-                <h3 className="text-xl text-white mb-2">Пока нет русских курсов</h3>
-                <p className="text-white/70">Русские курсы появятся здесь после добавления администратором</p>
+                <h3 className="text-xl text-white mb-2">No English courses yet</h3>
+                <p className="text-white/70">English courses will appear here once added by admin</p>
               </div>
             )}
           </div>
@@ -325,25 +322,25 @@ export default async function HomePage() {
             transition={{ duration: 0.5 }}
             className="text-3xl md:text-4xl font-bold text-white text-center"
           >
-            Отзывы студентов
+            Student Testimonials
           </ClientMotionWrapper>
           
           <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                name: "Александр С.",
-                role: "Разработчик",
-                content: "Качество уроков превзошло все мои ожидания. Материал подан очень доступно и интересно."
+                name: "Alexander S.",
+                role: "Developer",
+                content: "The quality of the lessons exceeded all my expectations. The material is presented in a very accessible and interesting way."
               },
               {
-                name: "Мария К.",
-                role: "Дизайнер",
-                content: "Отличная платформа! Удобный интерфейс и качественные материалы. Рекомендую всем!"
+                name: "Maria K.",
+                role: "Designer",
+                content: "Excellent platform! Convenient interface and quality materials. I recommend it to everyone!"
               },
               {
-                name: "Иван П.",
-                role: "Маркетолог",
-                content: "Прошел несколько курсов, все на высшем уровне. Теперь применяю полученные знания в работе."
+                name: "John P.",
+                role: "Marketer",
+                content: "Completed several courses, everything is top-notch. Now I apply the knowledge gained in my work."
               }
             ].map((testimonial, index) => (
               <ClientMotionWrapper
@@ -380,13 +377,13 @@ export default async function HomePage() {
             transition={{ duration: 0.5 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Начните обучение уже сегодня!
+              Start Learning Today!
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Присоединяйтесь к тысячам студентов, которые уже изменили свою жизнь с помощью наших курсов
+              Join thousands of students who have already changed their lives with our courses
             </p>
-            <Link href="/ru/courses" className="btn-secondary bg-white text-primary-600 hover:bg-white/90 text-lg px-8 py-4 inline-block">
-              Выбрать курс
+            <Link href="/en/courses" className="btn-secondary bg-white text-primary-600 hover:bg-white/90 text-lg px-8 py-4 inline-block">
+              Choose Course
             </Link>
           </ClientMotionWrapper>
         </div>
