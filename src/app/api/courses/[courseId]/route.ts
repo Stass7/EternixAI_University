@@ -21,9 +21,8 @@ export async function GET(
     
     await connectToDatabase()
     
-    // Находим курс по ID
+    // Находим курс по ID - убираем populate createdBy так как это поле не существует в схеме
     const course = await Course.findById(courseId)
-      .populate('createdBy', 'name email image')
     
     if (!course) {
       return NextResponse.json(
