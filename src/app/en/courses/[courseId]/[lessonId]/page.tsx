@@ -1,6 +1,10 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { checkLessonAccess } from '@/lib/course-access'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth/config'
+import BuyButton from '@/components/courses/BuyButton'
 
 // Принудительное использование динамического рендеринга
 export const dynamic = 'force-dynamic'
@@ -105,12 +109,21 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound()
   }
 
+  // Проверяем доступ к уроку
+  const accessResult = await checkLessonAccess(resolvedParams.courseId, resolvedParams.lessonId)
+  const session = await getServerSession(authOptions)
+  const isAuthenticated = !!session?.user
+
   const sortedLessons = course.lessons.sort((a, b) => a.order - b.order)
   const currentIndex = sortedLessons.findIndex(l => l.id === resolvedParams.lessonId)
   const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null
   const nextLesson = currentIndex < sortedLessons.length - 1 ? sortedLessons[currentIndex + 1] : null
 
   const videoId = extractYouTubeVideoId(currentLesson.videoUrl || '')
+
+  const formatPrice = (price: number) => {
+    return `$${price}`
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-20">
@@ -137,24 +150,61 @@ export default async function LessonPage({ params }: LessonPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main content - video */}
           <div className="lg:col-span-3">
-            {/* Video player */}
+            {/* Video player or paywall */}
             <div className="glassmorphism rounded-xl overflow-hidden mb-8">
-              {videoId ? (
-                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                  <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
-                    title={currentLesson.title}
-                    className="absolute top-0 left-0 w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
+              {accessResult.hasAccess ? (
+                // Show video only if user has access
+                videoId ? (
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
+                      title={currentLesson.title}
+                      className="absolute top-0 left-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-96 bg-slate-800 flex items-center justify-center">
+                    <div className="text-center text-white/60">
+                      <div className="text-6xl mb-4">📹</div>
+                      <p className="text-xl">Video unavailable</p>
+                      <p className="text-sm mt-2">Video link not found</p>
+                    </div>
+                  </div>
+                )
               ) : (
-                <div className="w-full h-96 bg-slate-800 flex items-center justify-center">
-                  <div className="text-center text-white/60">
-                    <div className="text-6xl mb-4">📹</div>
-                    <p className="text-xl">Video unavailable</p>
-                    <p className="text-sm mt-2">Video link not found</p>
+                // Paywall for unpaid course
+                <div className="w-full h-96 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <div className="text-center text-white p-8 max-w-md">
+                    <div className="text-6xl mb-6">🔒</div>
+                    <h3 className="text-2xl font-bold mb-4">Purchase the course to get access to it</h3>
+                    <p className="text-white/70 mb-6">
+                      This lesson is only available after purchasing the course "{course.title}"
+                    </p>
+                    <div className="space-y-3">
+                      {isAuthenticated ? (
+                        <BuyButton 
+                          courseId={course._id}
+                          courseTitle={course.title}
+                          price={course.price}
+                          locale="en"
+                        />
+                      ) : (
+                        <Link
+                          href="/en/auth/signin"
+                          className="btn-primary px-6 py-3 inline-block"
+                        >
+                          Sign In to Purchase
+                        </Link>
+                      )}
+                      <Link
+                        href={`/en/courses/${course._id}`}
+                        className="btn-secondary px-6 py-3 block"
+                      >
+                        ← Course Overview
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )}
@@ -181,11 +231,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
                         ✨ New lesson
                       </span>
                     )}
+                    {!accessResult.hasAccess && (
+                      <span className="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-xs">
+                        🔒 Purchase required
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {currentLesson.description && (
+              {accessResult.hasAccess && currentLesson.description && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-white mb-3">📋 Lesson Description</h3>
                   <p className="text-white/80 leading-relaxed">
@@ -194,99 +249,93 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 </div>
               )}
 
+              {!accessResult.hasAccess && (
+                <div className="mb-6">
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+                    <h3 className="text-yellow-400 font-semibold mb-2">💡 Lesson content hidden</h3>
+                    <p className="text-white/70">
+                      Lesson description and additional materials will be available after purchasing the course.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Lesson navigation */}
               <div className="flex items-center justify-between pt-6 border-t border-white/10">
                 {prevLesson ? (
                   <Link
                     href={`/en/courses/${course._id}/${prevLesson.id}`}
-                    className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+                    className="btn-secondary flex items-center px-4 py-2"
                   >
-                    <span>←</span>
-                    <div>
-                      <div className="text-sm">Previous lesson</div>
-                      <div className="font-semibold">{prevLesson.title}</div>
-                    </div>
+                    ← {prevLesson.title}
                   </Link>
                 ) : (
                   <div></div>
                 )}
-
-                {nextLesson ? (
+                
+                {nextLesson && (
                   <Link
                     href={`/en/courses/${course._id}/${nextLesson.id}`}
-                    className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors text-right"
+                    className="btn-secondary flex items-center px-4 py-2"
                   >
-                    <div>
-                      <div className="text-sm">Next lesson</div>
-                      <div className="font-semibold">{nextLesson.title}</div>
-                    </div>
-                    <span>→</span>
+                    {nextLesson.title} →
                   </Link>
-                ) : (
-                  <div></div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Sidebar - lessons list */}
+          {/* Sidebar - course content */}
           <div className="lg:col-span-1">
             <div className="glassmorphism rounded-xl p-6 sticky top-8">
-              <h3 className="text-lg font-bold text-white mb-4">
-                📚 Course Content
-              </h3>
-              
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {sortedLessons.map((lesson, index) => (
-                  <Link
-                    key={lesson.id}
-                    href={`/en/courses/${course._id}/${lesson.id}`}
-                    className={`block p-3 rounded-lg transition-colors ${
-                      lesson.id === currentLesson.id
-                        ? 'bg-primary-500/20 border border-primary-500/30'
-                        : 'hover:bg-white/5 border border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <span className="text-white/60 text-xs font-mono mt-1">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <h4 className={`text-sm font-medium line-clamp-2 ${
-                          lesson.id === currentLesson.id ? 'text-primary-300' : 'text-white'
-                        }`}>
-                          {lesson.title}
-                        </h4>
-                        <div className="flex items-center space-x-2 mt-1">
-                          {lesson.duration && (
-                            <span className="text-xs text-white/50">
-                              {lesson.duration}m
-                            </span>
-                          )}
-                          {lesson.isNewLesson && (
-                            <span className="text-xs text-green-400">
-                              ✨
-                            </span>
-                          )}
-                          {lesson.id === currentLesson.id && (
-                            <span className="text-xs text-primary-400">
-                              ▶️
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-white font-semibold">📚 Course Content</h3>
                 <Link
                   href={`/en/courses/${course._id}`}
-                  className="btn-secondary w-full py-2 text-sm"
+                  className="text-primary-400 hover:text-primary-300 text-sm"
                 >
                   ← Course Overview
                 </Link>
+              </div>
+              
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {sortedLessons.map((lesson, index) => (
+                  <div
+                    key={lesson.id}
+                    className={`p-3 rounded-lg border transition-colors ${
+                      lesson.id === currentLesson.id
+                        ? 'bg-primary-500/20 border-primary-500/30 text-white'
+                        : 'border-white/10 text-white/70 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xs font-mono opacity-60">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          {accessResult.hasAccess ? (
+                            <Link
+                              href={`/en/courses/${course._id}/${lesson.id}`}
+                              className="block truncate hover:text-white transition-colors"
+                            >
+                              {lesson.title}
+                            </Link>
+                          ) : (
+                            <span className="block truncate text-gray-400">
+                              🔒 {lesson.title}
+                            </span>
+                          )}
+                        </div>
+                        {lesson.duration && (
+                          <div className="text-xs opacity-60 mt-1">
+                            {lesson.duration} min
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

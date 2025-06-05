@@ -31,10 +31,7 @@ interface CourseCardProps {
 
 export default function CourseCard({ course, locale }: CourseCardProps) {
   const formatPrice = (price: number) => {
-    if (locale === 'ru') {
-      return `${price.toLocaleString('ru-RU')} ₽`
-    }
-    return `$${(price * 0.011).toFixed(0)}`
+    return `$${price}`
   }
 
   const getLanguageLabel = (lang: 'ru' | 'en') => {

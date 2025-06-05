@@ -17,12 +17,13 @@ export async function createCheckoutSession(params: {
   price: number;
   userId: string;
   email: string;
+  currency?: 'usd' | 'eur'; // Добавляем опциональный параметр валюты
 }) {
   if (!stripe) {
     throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.')
   }
 
-  const { courseId, courseTitle, price, userId, email } = params
+  const { courseId, courseTitle, price, userId, email, currency = 'usd' } = params
 
   // Создаем сессию для оплаты
   const session = await stripe.checkout.sessions.create({
@@ -30,7 +31,7 @@ export async function createCheckoutSession(params: {
     line_items: [
       {
         price_data: {
-          currency: 'usd',
+          currency: currency, // Используем переданную валюту или USD по умолчанию
           product_data: {
             name: courseTitle,
           },

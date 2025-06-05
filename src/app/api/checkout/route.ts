@@ -9,7 +9,7 @@ import mongoose from 'mongoose'
 
 export async function POST(request: Request) {
   try {
-    const { courseId, promoCodeId } = await request.json()
+    const { courseId, promoCodeId, currency = 'usd' } = await request.json()
     
     if (!courseId) {
       return NextResponse.json(
@@ -22,6 +22,14 @@ export async function POST(request: Request) {
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return NextResponse.json(
         { error: 'Invalid course ID' },
+        { status: 400 }
+      )
+    }
+
+    // Проверяем валидность валюты
+    if (!['usd', 'eur'].includes(currency)) {
+      return NextResponse.json(
+        { error: 'Invalid currency. Only USD and EUR are supported.' },
         { status: 400 }
       )
     }
@@ -83,7 +91,7 @@ export async function POST(request: Request) {
     
     // Получаем заголовок курса для текущей локали
     const locale = request.headers.get('Accept-Language')?.startsWith('ru') ? 'ru' : 'en'
-    const courseTitle = course.title.get(locale) || course.title.get('en') || 'Course'
+    const courseTitle = course.title.get ? (course.title.get(locale) || course.title.get('en') || course.title) : course.title
     
     // Создаем сессию Stripe
     const checkoutSession = await createCheckoutSession({
@@ -91,7 +99,8 @@ export async function POST(request: Request) {
       courseTitle,
       price: finalPrice,
       userId: user._id.toString(),
-      email: user.email
+      email: user.email,
+      currency: currency as 'usd' | 'eur'
     })
     
     return NextResponse.json({ url: checkoutSession.url })
