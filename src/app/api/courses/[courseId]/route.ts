@@ -35,7 +35,7 @@ export async function GET(
     // Проверяем доступ пользователя к курсу
     const accessInfo = await checkCourseAccess(courseId)
 
-    // Если у пользователя нет доступа, скрываем некоторую информацию
+    // Базовая информация о курсе
     let responseData: any = {
       _id: course._id,
       title: course.title,
@@ -55,11 +55,14 @@ export async function GET(
       access: accessInfo
     }
 
-    // Если у пользователя есть доступ, показываем полную информацию об уроках
-    if (accessInfo.hasAccess) {
+    // Определяем нужно ли показывать полную информацию
+    const shouldShowFullData = accessInfo.hasAccess || accessInfo.reason === 'admin_access' || accessInfo.userRole === 'admin'
+
+    if (shouldShowFullData) {
+      // Показываем полную информацию об уроках включая videoUrl
       responseData.lessons = course.lessons
     } else {
-      // Для неавторизованных пользователей показываем только базовую информацию об уроках
+      // Для пользователей без доступа показываем ограниченную информацию
       responseData.lessons = course.lessons.map((lesson: any) => ({
         id: lesson.id,
         title: lesson.title,
@@ -67,7 +70,7 @@ export async function GET(
         duration: lesson.duration,
         order: lesson.order,
         isNewLesson: lesson.isNewLesson,
-        // НЕ показываем videoUrl для неоплаченных курсов
+        // НЕ показываем videoUrl только для пользователей без доступа (не админов)
         videoUrl: null
       }))
       responseData.lessonsCount = course.lessons.length
