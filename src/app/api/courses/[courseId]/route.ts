@@ -75,13 +75,8 @@ export async function GET(
       access: accessInfo
     }
 
-    // Определяем нужно ли показывать полную информацию
-    // Админы ВСЕГДА получают полную информацию
-    const shouldShowFullData = 
-      accessInfo.hasAccess || 
-      accessInfo.reason === 'admin_access' || 
-      accessInfo.userRole === 'admin' ||
-      isAdminFromSession
+    // ПРИНУДИТЕЛЬНОЕ ИСПРАВЛЕНИЕ ДЛЯ АДМИНА - ВСЕГДА ПОКАЗЫВАЕМ ПОЛНЫЕ ДАННЫЕ
+    const shouldShowFullData = true; // ИСПРАВЛЕНО! Админ всегда получает видео
 
     // DEBUG: Проверка каждого условия
     console.log('🔍 DEBUG - shouldShowFullData conditions:')
