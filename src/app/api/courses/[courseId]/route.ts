@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import connectToDatabase from '@/lib/db/mongodb'
 import Course from '@/models/Course'
+import User from '@/models/User'
 import mongoose from 'mongoose'
 import { checkCourseAccess } from '@/lib/course-access'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth/config'
 
 export async function GET(
   request: Request,
@@ -35,6 +38,15 @@ export async function GET(
     // Проверяем доступ пользователя к курсу
     const accessInfo = await checkCourseAccess(courseId)
 
+    // Дополнительная проверка администратора через сессию
+    const session = await getServerSession(authOptions)
+    let isAdminFromSession = false
+    
+    if (session?.user?.email) {
+      const user = await User.findOne({ email: session.user.email })
+      isAdminFromSession = user?.role === 'admin'
+    }
+
     // Базовая информация о курсе
     let responseData: any = {
       _id: course._id,
@@ -56,7 +68,12 @@ export async function GET(
     }
 
     // Определяем нужно ли показывать полную информацию
-    const shouldShowFullData = accessInfo.hasAccess || accessInfo.reason === 'admin_access' || accessInfo.userRole === 'admin'
+    // Админы ВСЕГДА получают полную информацию
+    const shouldShowFullData = 
+      accessInfo.hasAccess || 
+      accessInfo.reason === 'admin_access' || 
+      accessInfo.userRole === 'admin' ||
+      isAdminFromSession
 
     if (shouldShowFullData) {
       // Показываем полную информацию об уроках включая videoUrl
