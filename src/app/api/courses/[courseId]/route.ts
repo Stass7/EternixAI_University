@@ -47,13 +47,7 @@ export async function GET(
       isAdminFromSession = user?.role === 'admin'
     }
 
-    // DEBUG: Проверка логики админского доступа
-    console.log('🔥 DEBUG API ROUTE - Admin Access Check:')
-    console.log('📧 Session email:', session?.user?.email)
-    console.log('✅ accessInfo.hasAccess:', accessInfo.hasAccess)
-    console.log('🔑 accessInfo.reason:', accessInfo.reason)
-    console.log('👤 accessInfo.userRole:', accessInfo.userRole)
-    console.log('🛡️ isAdminFromSession:', isAdminFromSession)
+
 
     // Базовая информация о курсе
     let responseData: any = {
@@ -75,25 +69,21 @@ export async function GET(
       access: accessInfo
     }
 
-    // ПРИНУДИТЕЛЬНОЕ ИСПРАВЛЕНИЕ ДЛЯ АДМИНА - ВСЕГДА ПОКАЗЫВАЕМ ПОЛНЫЕ ДАННЫЕ
-    const shouldShowFullData = true; // ИСПРАВЛЕНО! Админ всегда получает видео
+    // Определяем нужно ли показывать полную информацию
+    // Админы получают полный доступ, либо пользователи с оплаченным доступом
+    const shouldShowFullData = 
+      isAdminFromSession || 
+      accessInfo.hasAccess || 
+      accessInfo.reason === 'admin_access' || 
+      accessInfo.userRole === 'admin'
 
-    // DEBUG: Проверка каждого условия
-    console.log('🔍 DEBUG - shouldShowFullData conditions:')
-    console.log('   accessInfo.hasAccess:', accessInfo.hasAccess)
-    console.log('   accessInfo.reason === "admin_access":', accessInfo.reason === 'admin_access')
-    console.log('   accessInfo.userRole === "admin":', accessInfo.userRole === 'admin')
-    console.log('   isAdminFromSession:', isAdminFromSession)
-    console.log('🚦 FINAL shouldShowFullData:', shouldShowFullData)
 
-    if (shouldShowFullData) {
-      // Показываем полную информацию об уроках включая videoUrl
-      console.log('✅ Showing FULL data with videoUrl')
-      console.log('📹 First lesson videoUrl:', course.lessons[0]?.videoUrl)
-      responseData.lessons = course.lessons
-    } else {
-      // Для пользователей без доступа показываем ограниченную информацию
-      console.log('❌ Showing LIMITED data WITHOUT videoUrl')
+
+          if (shouldShowFullData) {
+        // Показываем полную информацию об уроках включая videoUrl
+        responseData.lessons = course.lessons
+      } else {
+        // Для пользователей без доступа показываем ограниченную информацию
       responseData.lessons = course.lessons.map((lesson: any) => ({
         id: lesson.id,
         title: lesson.title,

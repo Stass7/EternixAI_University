@@ -150,18 +150,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Основной контент - видео */}
           <div className="lg:col-span-3">
-            {/* ВРЕМЕННАЯ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ */}
-            <div className="bg-red-500/20 p-4 rounded mb-4 text-white text-sm">
-              <h4 className="font-bold mb-2">🐛 Debug Info (удалить позже):</h4>
-              <p><strong>accessResult.hasAccess:</strong> {accessResult.hasAccess.toString()}</p>
-              <p><strong>accessResult.reason:</strong> {accessResult.reason}</p>
-              <p><strong>accessResult.userRole:</strong> {accessResult.userRole || 'не определено'}</p>
-              <p><strong>currentLesson.videoUrl:</strong> "{currentLesson.videoUrl || 'ПУСТО'}"</p>
-              <p><strong>videoId после извлечения:</strong> "{videoId || 'ПУСТО'}"</p>
-              <p><strong>Урок ID:</strong> {currentLesson.id}</p>
-              <p><strong>Тест правильной ссылки:</strong> "{extractYouTubeVideoId('https://youtu.be/ytYdQb5Rvhw') || 'ПУСТО'}"</p>
-            </div>
-            
+
             {/* Видеоплеер или заглушка */}
             <div className="glassmorphism rounded-xl overflow-hidden mb-8">
               {accessResult.hasAccess ? (
