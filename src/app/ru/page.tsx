@@ -151,7 +151,7 @@ export default async function HomePage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="glassmorphism p-6 rounded-2xl"
+              className="rounded-2xl"
             >
               <div className="aspect-video relative w-full rounded-lg overflow-hidden">
                 <Image 
