@@ -123,26 +123,6 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
         </div>
         
-        {/* Логотип в левом верхнем углу hero секции */}
-        {settings.logo && !settings.logo.includes('LOGO') && (
-          <ClientMotionWrapper
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="absolute top-8 left-8 z-20"
-          >
-            <div className="w-20 h-20 relative">
-              <Image
-                src={settings.logo}
-                alt="EternixAI Logo"
-                fill
-                className="object-contain"
-                sizes="80px"
-              />
-            </div>
-          </ClientMotionWrapper>
-        )}
-        
         <div className="container-custom relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <ClientMotionWrapper

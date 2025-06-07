@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 type HeaderProps = {
   locale: string
@@ -12,7 +13,25 @@ type HeaderProps = {
 export default function Header({ locale }: HeaderProps) {
   const { data: session, status } = useSession()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [siteSettings, setSiteSettings] = useState<any>(null)
   const altLocale = locale === 'ru' ? 'en' : 'ru'
+  
+  // Получаем настройки сайта
+  useEffect(() => {
+    const fetchSiteSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/site-settings')
+        if (response.ok) {
+          const settings = await response.json()
+          setSiteSettings(settings)
+        }
+      } catch (error) {
+        console.error('Error fetching site settings:', error)
+      }
+    }
+    
+    fetchSiteSettings()
+  }, [])
   
   const navLinks = [
     { href: `/${locale}`, label: locale === 'ru' ? 'Главная' : 'Home' },
@@ -41,8 +60,34 @@ export default function Header({ locale }: HeaderProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center"
+            className="flex items-center space-x-3"
           >
+            {/* Логотип с анимацией */}
+            {siteSettings?.logoUrl && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ 
+                  duration: 0.6, 
+                  delay: 0.2, 
+                  type: "spring", 
+                  stiffness: 150, 
+                  damping: 10 
+                }}
+                className="relative flex-shrink-0"
+                style={{ zIndex: 60 }}
+              >
+                <Image
+                  src={siteSettings.logoUrl}
+                  alt="EternixAI Logo"
+                  width={80}
+                  height={80}
+                  className="object-contain rounded-lg"
+                  priority
+                />
+              </motion.div>
+            )}
+            
             <Link href={`/${locale}`} className="text-2xl font-bold text-white">
               EternixAI <span className="text-primary-500">University</span>
             </Link>
