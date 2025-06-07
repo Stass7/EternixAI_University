@@ -27,10 +27,10 @@ export default function Header({ locale }: HeaderProps) {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('/api/admin/site-settings')
+        const response = await fetch('/api/public/settings')
         if (response.ok) {
-          const settings = await response.json()
-          setSiteSettings(settings)
+          const data = await response.json()
+          setSiteSettings(data.settings)
         }
       } catch (error) {
         console.error('Failed to fetch site settings:', error)
@@ -49,6 +49,11 @@ export default function Header({ locale }: HeaderProps) {
   const handleSignOut = async () => {
     await signOut({ callbackUrl: `/${locale}` })
   }
+
+  // Проверяем, есть ли реальный логотип (не SVG заглушка)
+  const hasRealLogo = siteSettings?.logo && 
+    !siteSettings.logo.includes('data:image/svg+xml') &&
+    siteSettings.logo.startsWith('data:image/')
 
   return (
     <header 
@@ -70,7 +75,7 @@ export default function Header({ locale }: HeaderProps) {
             className="flex items-center space-x-3"
           >
             {/* Site Logo - conditional rendering */}
-            {siteSettings?.logo && (
+            {hasRealLogo && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -79,7 +84,7 @@ export default function Header({ locale }: HeaderProps) {
                 style={{ zIndex: 60 }}
               >
                 <Image
-                  src={siteSettings.logo}
+                  src={siteSettings.logo!}
                   alt="EternixAI University Logo"
                   width={80}
                   height={80}
