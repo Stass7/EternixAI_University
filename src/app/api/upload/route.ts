@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth/config'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-import { existsSync } from 'fs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,12 +13,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Проверяем права администратора (можно расширить логику позже)
-    // Пока разрешаем всем авторизованным пользователям
-
     const data = await request.formData()
     const file: File | null = data.get('file') as unknown as File
-    const type = data.get('type') as string || 'general' // image, video, document, general
+    const type = data.get('type') as string || 'image'
 
     if (!file) {
       return NextResponse.json(
@@ -30,63 +24,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Проверяем размер файла (максимум 50MB)
-    if (file.size > 50 * 1024 * 1024) {
+    // Проверяем размер файла (максимум 10MB для Base64 хранения в MongoDB)
+    if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 50MB' },
+        { error: 'File too large. Maximum size is 10MB for image uploads' },
         { status: 400 }
       )
     }
 
-    // Разрешенные типы файлов
-    const allowedTypes = {
-      image: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
-      video: ['video/mp4', 'video/webm', 'video/avi', 'video/mov'],
-      document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-      general: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'application/pdf']
-    }
-
-    const typeAllowed = allowedTypes[type as keyof typeof allowedTypes] || allowedTypes.general
-
-    if (!typeAllowed.includes(file.type)) {
+    // Проверяем что это изображение
+    if (!file.type.startsWith('image/')) {
       return NextResponse.json(
-        { error: `File type ${file.type} not allowed for ${type}` },
+        { error: 'Only image files are allowed' },
         { status: 400 }
       )
     }
 
+    // Разрешенные типы изображений
+    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+    
+    if (!allowedImageTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: `Image type ${file.type} not allowed. Supported: JPEG, PNG, WebP, GIF` },
+        { status: 400 }
+      )
+    }
+
+    // Конвертируем файл в Base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-
-    // Создаем уникальное имя файла
-    const timestamp = Date.now()
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const fileName = `${timestamp}_${originalName}`
-
-    // Определяем папку для загрузки
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', type)
+    const base64String = buffer.toString('base64')
     
-    // Создаем папку если она не существует
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
+    // Создаем data URL для хранения в MongoDB
+    const dataUrl = `data:${file.type};base64,${base64String}`
 
-    // Путь к файлу
-    const filePath = path.join(uploadDir, fileName)
-    
-    // Сохраняем файл
-    await writeFile(filePath, buffer)
-
-    // Возвращаем URL файла
-    const fileUrl = `/uploads/${type}/${fileName}`
+    // Логируем успешную загрузку
+    console.log(`✅ Image uploaded successfully: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`)
 
     return NextResponse.json({
       success: true,
-      fileName,
-      fileUrl,
+      fileName: file.name,
+      fileUrl: dataUrl, // Возвращаем data URL для хранения в MongoDB
       fileSize: file.size,
       fileType: file.type,
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
+      storage: 'mongodb' // Указываем что файл хранится в MongoDB
     })
   } catch (error) {
     console.error('Upload error:', error)

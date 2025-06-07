@@ -160,7 +160,13 @@ export default function AdminSettings({ locale }: AdminSettingsProps) {
           ...prev,
           [type === 'hero' ? 'heroImage' : 'logo']: data.fileUrl
         } : null)
-        alert(t.messages.uploadSuccess)
+        
+        // Улучшенное сообщение с информацией о хранении в MongoDB
+        const sizeKB = (data.fileSize / 1024).toFixed(1)
+        alert(`✅ ${t.messages.uploadSuccess}\n📁 Файл сохранен в MongoDB Atlas (${sizeKB}KB)\n💾 Изображение будет сохранено после нажатия "Save"`)
+      } else {
+        const errorData = await response.json()
+        alert(`❌ ${t.messages.error}\n${errorData.error || 'Upload failed'}`)
       }
     } catch (error) {
       console.error('Error uploading image:', error)
