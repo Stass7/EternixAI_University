@@ -10,15 +10,22 @@ type HeaderProps = {
   locale: string
 }
 
+interface SiteSettings {
+  siteName: string
+  siteDescription: string
+  logo?: string
+  heroImage?: string
+}
+
 export default function Header({ locale }: HeaderProps) {
   const { data: session, status } = useSession()
   const [showDropdown, setShowDropdown] = useState(false)
-  const [siteSettings, setSiteSettings] = useState<any>(null)
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
   const altLocale = locale === 'ru' ? 'en' : 'ru'
   
-  // Получаем настройки сайта
+  // Fetch site settings
   useEffect(() => {
-    const fetchSiteSettings = async () => {
+    const fetchSettings = async () => {
       try {
         const response = await fetch('/api/admin/site-settings')
         if (response.ok) {
@@ -26,11 +33,11 @@ export default function Header({ locale }: HeaderProps) {
           setSiteSettings(settings)
         }
       } catch (error) {
-        console.error('Error fetching site settings:', error)
+        console.error('Failed to fetch site settings:', error)
       }
     }
     
-    fetchSiteSettings()
+    fetchSettings()
   }, [])
   
   const navLinks = [
@@ -62,28 +69,24 @@ export default function Header({ locale }: HeaderProps) {
             transition={{ duration: 0.5 }}
             className="flex items-center space-x-3"
           >
-            {/* Логотип с анимацией */}
-            {siteSettings?.logoUrl && (
+            {/* Site Logo - conditional rendering */}
+            {siteSettings?.logo && (
               <motion.div
-                initial={{ opacity: 0, scale: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ 
-                  duration: 0.6, 
-                  delay: 0.2, 
-                  type: "spring", 
-                  stiffness: 150, 
-                  damping: 10 
-                }}
-                className="relative flex-shrink-0"
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="relative"
                 style={{ zIndex: 60 }}
               >
                 <Image
-                  src={siteSettings.logoUrl}
-                  alt="EternixAI Logo"
+                  src={siteSettings.logo}
+                  alt="EternixAI University Logo"
                   width={80}
                   height={80}
-                  className="object-contain rounded-lg"
-                  priority
+                  className="object-contain"
+                  style={{ 
+                    filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.3))',
+                  }}
                 />
               </motion.div>
             )}
