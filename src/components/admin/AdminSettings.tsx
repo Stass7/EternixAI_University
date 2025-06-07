@@ -356,7 +356,7 @@ export default function AdminSettings({ locale }: AdminSettingsProps) {
                   )}
                 </div>
                 <input
-                  type="url"
+                  type="text"
                   value={settings.heroImage}
                   onChange={(e) => updateSettings('heroImage', e.target.value)}
                   placeholder="Или введите URL изображения"
@@ -393,7 +393,7 @@ export default function AdminSettings({ locale }: AdminSettingsProps) {
                   )}
                 </div>
                 <input
-                  type="url"
+                  type="text"
                   value={settings.logo}
                   onChange={(e) => updateSettings('logo', e.target.value)}
                   placeholder="Или введите URL логотипа"
