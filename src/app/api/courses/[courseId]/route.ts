@@ -47,8 +47,6 @@ export async function GET(
       isAdminFromSession = user?.role === 'admin'
     }
 
-
-
     // Базовая информация о курсе
     let responseData: any = {
       _id: course._id,
@@ -77,13 +75,11 @@ export async function GET(
       accessInfo.reason === 'admin_access' || 
       accessInfo.userRole === 'admin'
 
-
-
-          if (shouldShowFullData) {
-        // Показываем полную информацию об уроках включая videoUrl
-        responseData.lessons = course.lessons
-      } else {
-        // Для пользователей без доступа показываем ограниченную информацию
+    if (shouldShowFullData) {
+      // Показываем полную информацию об уроках включая videoUrl для администраторов и пользователей с доступом
+      responseData.lessons = course.lessons
+    } else {
+      // Для пользователей без доступа показываем ограниченную информацию
       responseData.lessons = course.lessons.map((lesson: any) => ({
         id: lesson.id,
         title: lesson.title,
@@ -94,8 +90,10 @@ export async function GET(
         // НЕ показываем videoUrl только для пользователей без доступа (не админов)
         videoUrl: null
       }))
-      responseData.lessonsCount = course.lessons.length
     }
+    
+    // Добавляем количество уроков для всех случаев
+    responseData.lessonsCount = course.lessons.length
     
     return NextResponse.json({ course: responseData })
   } catch (error) {
