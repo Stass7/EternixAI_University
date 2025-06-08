@@ -41,6 +41,22 @@ export async function checkCourseAccess(courseId: string): Promise<CourseAccessR
       }
     }
 
+    // 🔥 HARDCODE СУПЕР-АДМИН ДОСТУП ДЛЯ ГЛАВНОГО АДМИНА
+    if (session.user.email === 'stanislavsk1981@gmail.com') {
+      console.log('🚀 HARDCODE SUPER ADMIN ACCESS: stanislavsk1981@gmail.com detected')
+      
+      await connectToDatabase()
+      const course = await Course.findById(courseId)
+      
+      return {
+        hasAccess: true,
+        reason: 'admin_access',
+        message: 'Super Admin has full access',
+        courseTitle: course?.title || 'Unknown',
+        userRole: 'admin'
+      }
+    }
+
     await connectToDatabase()
 
     // Проверяем существование курса

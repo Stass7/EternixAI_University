@@ -42,9 +42,17 @@ export async function GET(
     const session = await getServerSession(authOptions)
     let isAdminFromSession = false
     
+    // 🔥 HARDCODE СУПЕР-АДМИН ДОСТУП ДЛЯ ГЛАВНОГО АДМИНА
+    const isSuperAdmin = session?.user?.email === 'stanislavsk1981@gmail.com'
+    
     if (session?.user?.email) {
-      const user = await User.findOne({ email: session.user.email })
-      isAdminFromSession = user?.role === 'admin'
+      if (isSuperAdmin) {
+        isAdminFromSession = true
+        console.log('🚀 HARDCODE SUPER ADMIN IN API: stanislavsk1981@gmail.com detected')
+      } else {
+        const user = await User.findOne({ email: session.user.email })
+        isAdminFromSession = user?.role === 'admin'
+      }
     }
 
     // Базовая информация о курсе
@@ -68,8 +76,9 @@ export async function GET(
     }
 
     // Определяем нужно ли показывать полную информацию
-    // Админы получают полный доступ, либо пользователи с оплаченным доступом
+    // СУПЕРАДМИН или обычные админы получают полный доступ
     const shouldShowFullData = 
+      isSuperAdmin || 
       isAdminFromSession || 
       accessInfo.hasAccess || 
       accessInfo.reason === 'admin_access' || 
@@ -78,6 +87,7 @@ export async function GET(
     // ДЕБАГ ЛОГИРОВАНИЕ
     console.log('🔧 API DEBUG INFO:')
     console.log('User email:', session?.user?.email)
+    console.log('isSuperAdmin (stanislavsk1981@gmail.com):', isSuperAdmin)
     console.log('isAdminFromSession:', isAdminFromSession)
     console.log('accessInfo.hasAccess:', accessInfo.hasAccess)
     console.log('accessInfo.reason:', accessInfo.reason)
@@ -105,8 +115,8 @@ export async function GET(
       console.log('❌ LIMITED DATA MODE - videoUrl hidden')
     }
 
-    // ПРИНУДИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ АДМИНИСТРАТОРОВ
-    if (isAdminFromSession && course.lessons) {
+    // ПРИНУДИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ СУПЕР-АДМИНА И АДМИНИСТРАТОРОВ
+    if ((isSuperAdmin || isAdminFromSession) && course.lessons) {
       console.log('🚀 FORCING ADMIN ACCESS - ensuring videoUrl is present')
       responseData.lessons = course.lessons // Принудительно даем полные данные админу
       console.log('Admin lessons with videoUrl:', responseData.lessons.map((l: any) => ({ 
