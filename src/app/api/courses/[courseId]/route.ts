@@ -75,9 +75,21 @@ export async function GET(
       accessInfo.reason === 'admin_access' || 
       accessInfo.userRole === 'admin'
 
+    // ДЕБАГ ЛОГИРОВАНИЕ
+    console.log('🔧 API DEBUG INFO:')
+    console.log('User email:', session?.user?.email)
+    console.log('isAdminFromSession:', isAdminFromSession)
+    console.log('accessInfo.hasAccess:', accessInfo.hasAccess)
+    console.log('accessInfo.reason:', accessInfo.reason)
+    console.log('accessInfo.userRole:', accessInfo.userRole)
+    console.log('shouldShowFullData:', shouldShowFullData)
+    console.log('Course has lessons:', course.lessons?.length || 0)
+    console.log('First lesson videoUrl:', course.lessons?.[0]?.videoUrl || 'EMPTY')
+
     if (shouldShowFullData) {
       // Показываем полную информацию об уроках включая videoUrl для администраторов и пользователей с доступом
       responseData.lessons = course.lessons
+      console.log('✅ FULL DATA MODE - videoUrl included')
     } else {
       // Для пользователей без доступа показываем ограниченную информацию
       responseData.lessons = course.lessons.map((lesson: any) => ({
@@ -90,10 +102,24 @@ export async function GET(
         // НЕ показываем videoUrl только для пользователей без доступа (не админов)
         videoUrl: null
       }))
+      console.log('❌ LIMITED DATA MODE - videoUrl hidden')
+    }
+
+    // ПРИНУДИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ АДМИНИСТРАТОРОВ
+    if (isAdminFromSession && course.lessons) {
+      console.log('🚀 FORCING ADMIN ACCESS - ensuring videoUrl is present')
+      responseData.lessons = course.lessons // Принудительно даем полные данные админу
+      console.log('Admin lessons with videoUrl:', responseData.lessons.map((l: any) => ({ 
+        title: l.title, 
+        videoUrl: l.videoUrl 
+      })))
     }
     
     // Добавляем количество уроков для всех случаев
     responseData.lessonsCount = course.lessons.length
+    
+    console.log('📤 FINAL RESPONSE lessons count:', responseData.lessons?.length)
+    console.log('📤 FINAL RESPONSE first lesson:', responseData.lessons?.[0])
     
     return NextResponse.json({ course: responseData })
   } catch (error) {
