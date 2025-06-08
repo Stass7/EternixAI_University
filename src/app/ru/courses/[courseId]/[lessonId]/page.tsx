@@ -5,6 +5,8 @@ import { checkLessonAccess } from '@/lib/course-access'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth/config'
 import BuyButton from '@/components/courses/BuyButton'
+import connectToDatabase from '@/lib/db/mongodb'
+import User from '@/models/User'
 
 // Принудительное использование динамического рендеринга
 export const dynamic = 'force-dynamic'
@@ -114,6 +116,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const session = await getServerSession(authOptions)
   const isAuthenticated = !!session?.user
 
+  // ВАЖНО: Дополнительная проверка администратора
+  let isAdmin = false
+  if (session?.user?.email) {
+    await connectToDatabase()
+    const user = await User.findOne({ email: session.user.email })
+    isAdmin = user?.role === 'admin'
+  }
+
   const sortedLessons = course.lessons.sort((a, b) => a.order - b.order)
   const currentIndex = sortedLessons.findIndex(l => l.id === resolvedParams.lessonId)
   const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null
@@ -128,6 +138,18 @@ export default async function LessonPage({ params }: LessonPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ДЕБАГ БЛОК ДЛЯ АДМИНИСТРАТОРОВ */}
+        {isAdmin && (
+          <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded-lg text-white">
+            <h4 className="font-bold text-red-400">🔧 ADMIN DEBUG INFO:</h4>
+            <p>Access Result: {JSON.stringify(accessResult)}</p>
+            <p>Current Lesson VideoURL: {currentLesson.videoUrl || 'NULL/EMPTY'}</p>
+            <p>Extracted Video ID: {videoId || 'NULL/EMPTY'}</p>
+            <p>User Role: {isAdmin ? 'ADMIN' : 'USER'}</p>
+            <p>Has Access: {accessResult.hasAccess ? 'TRUE' : 'FALSE'}</p>
+          </div>
+        )}
+
         {/* Breadcrumb */}
         <nav className="mb-8">
           <div className="flex items-center space-x-2 text-white/60 text-sm">
@@ -153,8 +175,9 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
             {/* Видеоплеер или заглушка */}
             <div className="glassmorphism rounded-xl overflow-hidden mb-8">
-              {accessResult.hasAccess ? (
-                // Показываем видео только если есть доступ
+              {/* ПРИНУДИТЕЛЬНЫЙ ДОСТУП ДЛЯ АДМИНИСТРАТОРОВ */}
+              {(accessResult.hasAccess || isAdmin) ? (
+                // Показываем видео если есть доступ ИЛИ пользователь админ
                 videoId ? (
                   <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                     <iframe
@@ -170,7 +193,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
                     <div className="text-center text-white/60">
                       <div className="text-6xl mb-4">📹</div>
                       <p className="text-xl">Видео недоступно</p>
-                      <p className="text-sm mt-2">Ссылка на видео не найдена</p>
+                      <p className="text-sm mt-2">
+                        {isAdmin ? 
+                          `ADMIN: URL урока пустой - добавьте видео URL в админ-панели` : 
+                          'Ссылка на видео не найдена'
+                        }
+                      </p>
                     </div>
                   </div>
                 )
@@ -232,16 +260,21 @@ export default async function LessonPage({ params }: LessonPageProps) {
                         ✨ Новый урок
                       </span>
                     )}
-                    {!accessResult.hasAccess && (
+                    {!accessResult.hasAccess && !isAdmin && (
                       <span className="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-xs">
                         🔒 Требуется покупка
+                      </span>
+                    )}
+                    {isAdmin && (
+                      <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
+                        👑 Админ доступ
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {accessResult.hasAccess && currentLesson.description && (
+              {(accessResult.hasAccess || isAdmin) && currentLesson.description && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-white mb-3">📋 Описание урока</h3>
                   <p className="text-white/80 leading-relaxed">
@@ -250,7 +283,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 </div>
               )}
 
-              {!accessResult.hasAccess && (
+              {!accessResult.hasAccess && !isAdmin && (
                 <div className="mb-6">
                   <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
                     <h3 className="text-yellow-400 font-semibold mb-2">💡 Содержимое урока скрыто</h3>
@@ -299,14 +332,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 </Link>
               </div>
               
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="space-y-3">
                 {sortedLessons.map((lesson, index) => (
                   <div
                     key={lesson.id}
-                    className={`p-3 rounded-lg border transition-colors ${
+                    className={`p-3 rounded-lg transition-colors ${
                       lesson.id === currentLesson.id
-                        ? 'bg-primary-500/20 border-primary-500/30 text-white'
-                        : 'border-white/10 text-white/70 hover:bg-white/5'
+                        ? 'bg-primary-500/20 border border-primary-500/30'
+                        : 'bg-white/5 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -315,7 +348,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                          {accessResult.hasAccess ? (
+                          {(accessResult.hasAccess || isAdmin) ? (
                             <Link
                               href={`/ru/courses/${course._id}/${lesson.id}`}
                               className="block truncate hover:text-white transition-colors"

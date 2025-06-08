@@ -5,6 +5,8 @@ import { checkLessonAccess } from '@/lib/course-access'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth/config'
 import BuyButton from '@/components/courses/BuyButton'
+import connectToDatabase from '@/lib/db/mongodb'
+import User from '@/models/User'
 
 // Принудительное использование динамического рендеринга
 export const dynamic = 'force-dynamic'
@@ -114,6 +116,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const session = await getServerSession(authOptions)
   const isAuthenticated = !!session?.user
 
+  // IMPORTANT: Additional admin check
+  let isAdmin = false
+  if (session?.user?.email) {
+    await connectToDatabase()
+    const user = await User.findOne({ email: session.user.email })
+    isAdmin = user?.role === 'admin'
+  }
+
   const sortedLessons = course.lessons.sort((a, b) => a.order - b.order)
   const currentIndex = sortedLessons.findIndex(l => l.id === resolvedParams.lessonId)
   const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null
@@ -128,6 +138,18 @@ export default async function LessonPage({ params }: LessonPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ADMIN DEBUG BLOCK */}
+        {isAdmin && (
+          <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded-lg text-white">
+            <h4 className="font-bold text-red-400">🔧 ADMIN DEBUG INFO:</h4>
+            <p>Access Result: {JSON.stringify(accessResult)}</p>
+            <p>Current Lesson VideoURL: {currentLesson.videoUrl || 'NULL/EMPTY'}</p>
+            <p>Extracted Video ID: {videoId || 'NULL/EMPTY'}</p>
+            <p>User Role: {isAdmin ? 'ADMIN' : 'USER'}</p>
+            <p>Has Access: {accessResult.hasAccess ? 'TRUE' : 'FALSE'}</p>
+          </div>
+        )}
+
         {/* Breadcrumb */}
         <nav className="mb-8">
           <div className="flex items-center space-x-2 text-white/60 text-sm">
@@ -152,8 +174,9 @@ export default async function LessonPage({ params }: LessonPageProps) {
           <div className="lg:col-span-3">
             {/* Video player or paywall */}
             <div className="glassmorphism rounded-xl overflow-hidden mb-8">
-              {accessResult.hasAccess ? (
-                // Show video only if user has access
+              {/* FORCED ACCESS FOR ADMINISTRATORS */}
+              {(accessResult.hasAccess || isAdmin) ? (
+                // Show video if has access OR user is admin
                 videoId ? (
                   <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                     <iframe
@@ -169,16 +192,21 @@ export default async function LessonPage({ params }: LessonPageProps) {
                     <div className="text-center text-white/60">
                       <div className="text-6xl mb-4">📹</div>
                       <p className="text-xl">Video unavailable</p>
-                      <p className="text-sm mt-2">Video link not found</p>
+                      <p className="text-sm mt-2">
+                        {isAdmin ? 
+                          `ADMIN: Lesson URL is empty - add video URL in admin panel` : 
+                          'Video link not found'
+                        }
+                      </p>
                     </div>
                   </div>
                 )
               ) : (
-                // Paywall for unpaid course
+                // Paywall for unpurchased course
                 <div className="w-full h-96 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                   <div className="text-center text-white p-8 max-w-md">
                     <div className="text-6xl mb-6">🔒</div>
-                    <h3 className="text-2xl font-bold mb-4">Purchase the course to get access to it</h3>
+                    <h3 className="text-2xl font-bold mb-4">Purchase the course to access it</h3>
                     <p className="text-white/70 mb-6">
                       This lesson is only available after purchasing the course "{course.title}"
                     </p>
@@ -231,25 +259,30 @@ export default async function LessonPage({ params }: LessonPageProps) {
                         ✨ New lesson
                       </span>
                     )}
-                    {!accessResult.hasAccess && (
+                    {!accessResult.hasAccess && !isAdmin && (
                       <span className="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-xs">
                         🔒 Purchase required
+                      </span>
+                    )}
+                    {isAdmin && (
+                      <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
+                        👑 Admin access
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {accessResult.hasAccess && currentLesson.description && (
+              {(accessResult.hasAccess || isAdmin) && currentLesson.description && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-3">📋 Lesson Description</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">📋 Lesson description</h3>
                   <p className="text-white/80 leading-relaxed">
                     {currentLesson.description}
                   </p>
                 </div>
               )}
 
-              {!accessResult.hasAccess && (
+              {!accessResult.hasAccess && !isAdmin && (
                 <div className="mb-6">
                   <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
                     <h3 className="text-yellow-400 font-semibold mb-2">💡 Lesson content hidden</h3>
@@ -289,7 +322,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
           <div className="lg:col-span-1">
             <div className="glassmorphism rounded-xl p-6 sticky top-8">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-semibold">📚 Course Content</h3>
+                <h3 className="text-white font-semibold">📚 Course content</h3>
                 <Link
                   href={`/en/courses/${course._id}`}
                   className="text-primary-400 hover:text-primary-300 text-sm"
@@ -314,7 +347,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                          {accessResult.hasAccess ? (
+                          {(accessResult.hasAccess || isAdmin) ? (
                             <Link
                               href={`/en/courses/${course._id}/${lesson.id}`}
                               className="block truncate hover:text-white transition-colors"
