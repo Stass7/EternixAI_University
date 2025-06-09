@@ -115,6 +115,15 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase()
     
+    // 🔥 УДАЛЯЕМ СТАРЫЙ ИНДЕКС SLUG ЕСЛИ ОН СУЩЕСТВУЕТ
+    try {
+      await Course.collection.dropIndex('slug_1')
+      console.log('✅ Старый индекс slug успешно удален')
+    } catch (error) {
+      // Индекс может не существовать - это нормально
+      console.log('ℹ️ Индекс slug не найден или уже удален')
+    }
+    
     const user = await User.findOne({ email: session.user.email })
     if (!user || user.role !== 'admin') {
       return NextResponse.json(
@@ -157,6 +166,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('🔧 Creating course with language:', language)
+
     // Создаем новый курс
     const course = new Course({
       title: title.trim(),
@@ -176,6 +187,8 @@ export async function POST(request: NextRequest) {
     })
 
     await course.save()
+
+    console.log('✅ Course created successfully with language:', course.language)
 
     return NextResponse.json({
       success: true,

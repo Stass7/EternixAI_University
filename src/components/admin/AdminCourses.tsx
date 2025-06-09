@@ -47,7 +47,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [languageFilter, setLanguageFilter] = useState('all')
+  const [languageFilter, setLanguageFilter] = useState(locale)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -73,7 +73,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    language: 'ru' as 'ru' | 'en',
+    language: locale as 'ru' | 'en',
     originalPrice: '',
     price: '',
     category: '',
@@ -320,7 +320,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     setFormData({
       title: '',
       description: '',
-      language: 'ru',
+      language: locale as 'ru' | 'en',
       originalPrice: '',
       price: '',
       category: '',
