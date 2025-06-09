@@ -7,6 +7,8 @@ import { authOptions } from '@/lib/auth/config'
 import BuyButton from '@/components/courses/BuyButton'
 import connectToDatabase from '@/lib/db/mongodb'
 import User from '@/models/User'
+import Course from '@/models/Course'
+import mongoose from 'mongoose'
 
 // Принудительное использование динамического рендеринга
 export const dynamic = 'force-dynamic'
@@ -46,20 +48,70 @@ interface LessonPageProps {
   }>
 }
 
+// 🔥 НОВАЯ ФУНКЦИЯ - ПРЯМОЕ ОБРАЩЕНИЕ К БД ВМЕСТО API
 async function getCourseData(courseId: string): Promise<Course | null> {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/courses/${courseId}`, {
-      cache: 'no-store'
-    })
-    
-    if (!response.ok) {
+    // Проверяем валидность ID
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return null
     }
+
+    await connectToDatabase()
     
-    const data = await response.json()
-    return data.course
+    // Получаем курс напрямую из БД со всеми данными включая videoURL
+    const course: any = await Course.findById(courseId).lean()
+    
+    if (!course) {
+      return null
+    }
+
+    // Получаем сессию для проверки админа
+    const session = await getServerSession(authOptions)
+    
+    // 🔥 HARDCODE ПРОВЕРКА ДЛЯ СУПЕР-АДМИНА
+    const isSuperAdmin = session?.user?.email === 'stanislavsk1981@gmail.com'
+    
+    let isAdmin = false
+    if (session?.user?.email) {
+      if (isSuperAdmin) {
+        isAdmin = true
+        console.log('🚀 SUPER ADMIN DETECTED IN getCourseData: stanislavsk1981@gmail.com')
+      } else {
+        const user = await User.findOne({ email: session.user.email })
+        isAdmin = user?.role === 'admin'
+      }
+    }
+
+    // Логирование для отладки
+    console.log('🔧 getCourseData DEBUG:')
+    console.log('Course ID:', courseId)
+    console.log('User email:', session?.user?.email)
+    console.log('isSuperAdmin:', isSuperAdmin)
+    console.log('isAdmin:', isAdmin)
+    console.log('Course has lessons:', course.lessons?.length || 0)
+    console.log('First lesson has videoUrl:', !!course.lessons?.[0]?.videoUrl)
+    console.log('First lesson videoUrl:', course.lessons?.[0]?.videoUrl || 'EMPTY')
+
+    // Форматируем данные курса для возврата
+    return {
+      _id: course._id.toString(),
+      title: course.title,
+      description: course.description,
+      language: course.language,
+      price: course.price,
+      originalPrice: course.originalPrice,
+      discount: course.discount,
+      category: course.category,
+      imageUrl: course.imageUrl,
+      published: course.published,
+      featured: course.featured,
+      isNewCourse: course.isNewCourse,
+      lessons: course.lessons || [], // 🔥 ВСЕГДА ВОЗВРАЩАЕМ ВСЕ ДАННЫЕ УРОКОВ НА СЕРВЕРЕ
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
+    }
   } catch (error) {
-    console.error('Error fetching course:', error)
+    console.error('Error fetching course from DB:', error)
     return null
   }
 }
@@ -116,12 +168,18 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const session = await getServerSession(authOptions)
   const isAuthenticated = !!session?.user
 
-  // IMPORTANT: Additional admin check
+  // 🔥 УЛУЧШЕННАЯ ПРОВЕРКА АДМИНИСТРАТОРА С HARDCODE
   let isAdmin = false
   if (session?.user?.email) {
-    await connectToDatabase()
-    const user = await User.findOne({ email: session.user.email })
-    isAdmin = user?.role === 'admin'
+    // HARDCODE проверка для супер-админа
+    if (session.user.email === 'stanislavsk1981@gmail.com') {
+      isAdmin = true
+      console.log('🚀 SUPER ADMIN DETECTED IN PAGE: stanislavsk1981@gmail.com')
+    } else {
+      await connectToDatabase()
+      const user = await User.findOne({ email: session.user.email })
+      isAdmin = user?.role === 'admin'
+    }
   }
 
   const sortedLessons = course.lessons.sort((a, b) => a.order - b.order)
