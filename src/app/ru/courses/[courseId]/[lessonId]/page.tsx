@@ -59,7 +59,7 @@ async function getCourseData(courseId: string): Promise<Course | null> {
     await connectToDatabase()
     
     // Получаем курс напрямую из БД со всеми данными включая videoURL
-    const course = await Course.findById(courseId).lean()
+    const course: any = await Course.findById(courseId).lean()
     
     if (!course) {
       return null
