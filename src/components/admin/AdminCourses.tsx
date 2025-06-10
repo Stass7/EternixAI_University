@@ -57,19 +57,177 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Управление категориями
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 'programming', name: 'Программирование' },
-    { id: 'design', name: 'Дизайн' },
-    { id: 'marketing', name: 'Маркетинг' },
-    { id: 'business', name: 'Бизнес' },
-    { id: 'ai', name: 'Искусственный интеллект' },
-    { id: 'data-science', name: 'Наука о данных' },
-    { id: 'other', name: 'Другое' }
-  ])
+  // Translations object for localization
+  const translations = {
+    ru: {
+      title: 'Управление курсами',
+      addCourse: 'Добавить курс',
+      manageCategories: 'Управление категориями',
+      searchPlaceholder: 'Поиск курсов...',
+      allStatuses: 'Все статусы',
+      published: 'Опубликованные',
+      drafts: 'Черновики',
+      allLanguages: 'Все языки',
+      russian: 'Русский',
+      english: 'English',
+      loading: 'Загрузка...',
+      image: 'Изображение',
+      titleColumn: 'Название',
+      language: 'Язык',
+      category: 'Категория',
+      price: 'Цена',
+      lessons: 'Уроки',
+      status: 'Статус',
+      labels: 'Метки',
+      updated: 'Обновлен',
+      actions: 'Действия',
+      unpublish: 'Снять',
+      publish: 'Опубликовать',
+      removeNew: 'Убрать NEW',
+      markNew: 'Пометить NEW',
+      edit: 'Редактировать',
+      delete: 'Удалить',
+      draft: 'Черновик',
+      new: 'Новый',
+      hot: 'Хит',
+      confirmDelete: 'Вы уверены, что хотите удалить этот курс?',
+      createCourse: 'Создать курс',
+      editCourse: 'Редактировать курс',
+      courseTitle: 'Название курса',
+      courseTitlePlaceholder: 'Введите название курса',
+      courseDescription: 'Описание курса',
+      courseDescriptionPlaceholder: 'Введите описание курса',
+      courseLanguage: 'Язык курса',
+      selectCategory: 'Выберите категорию',
+      originalPrice: 'Первоначальная цена',
+      currentPrice: 'Текущая цена (оставьте пустым если без скидки)',
+      courseImage: 'Изображение курса',
+      uploadImage: 'Загрузить изображение',
+      uploading: 'Загрузка...',
+      markAsNew: 'Пометить как новый курс',
+      newUntil: 'Новый до',
+      lessonManagement: 'Управление уроками',
+      addLesson: 'Добавить урок',
+      lessonTitle: 'Название урока',
+      lessonDescription: 'Описание урока',
+      lessonVideoUrl: 'Ссылка на видео',
+      lessonDuration: 'Длительность (в минутах)',
+      removeLesson: 'Удалить',
+      cancel: 'Отмена',
+      save: 'Сохранить',
+      saving: 'Сохранение...',
+      addCategory: 'Добавить',
+      categoryName: 'Название категории',
+      fillCourseTitle: 'Заполните название курса',
+      fillCourseDescription: 'Заполните описание курса',
+      fillOriginalPrice: 'Укажите первоначальную цену',
+      selectCategoryError: 'Выберите категорию',
+      courseUpdated: 'Курс успешно обновлен!',
+      courseCreated: 'Курс успешно создан!',
+      errorPrefix: 'Ошибка: ',
+      saveError: 'Ошибка сохранения: ',
+      programming: 'Программирование',
+      design: 'Дизайн',
+      marketing: 'Маркетинг',
+      business: 'Бизнес',
+      ai: 'Искусственный интеллект',
+      dataScience: 'Наука о данных',
+      other: 'Другое'
+    },
+    en: {
+      title: 'Course Management',
+      addCourse: 'Add Course',
+      manageCategories: 'Manage Categories',
+      searchPlaceholder: 'Search courses...',
+      allStatuses: 'All statuses',
+      published: 'Published',
+      drafts: 'Drafts',
+      allLanguages: 'All languages',
+      russian: 'Russian',
+      english: 'English',
+      loading: 'Loading...',
+      image: 'Image',
+      titleColumn: 'Title',
+      language: 'Language',
+      category: 'Category',
+      price: 'Price',
+      lessons: 'Lessons',
+      status: 'Status',
+      labels: 'Labels',
+      updated: 'Updated',
+      actions: 'Actions',
+      unpublish: 'Unpublish',
+      publish: 'Publish',
+      removeNew: 'Remove NEW',
+      markNew: 'Mark NEW',
+      edit: 'Edit',
+      delete: 'Delete',
+      draft: 'Draft',
+      new: 'New',
+      hot: 'Hot',
+      confirmDelete: 'Are you sure you want to delete this course?',
+      createCourse: 'Create Course',
+      editCourse: 'Edit Course',
+      courseTitle: 'Course Title',
+      courseTitlePlaceholder: 'Enter course title',
+      courseDescription: 'Course Description',
+      courseDescriptionPlaceholder: 'Enter course description',
+      courseLanguage: 'Course Language',
+      selectCategory: 'Select category',
+      originalPrice: 'Original Price',
+      currentPrice: 'Current Price (leave empty if no discount)',
+      courseImage: 'Course Image',
+      uploadImage: 'Upload Image',
+      uploading: 'Uploading...',
+      markAsNew: 'Mark as new course',
+      newUntil: 'New until',
+      lessonManagement: 'Lesson Management',
+      addLesson: 'Add Lesson',
+      lessonTitle: 'Lesson Title',
+      lessonDescription: 'Lesson Description',
+      lessonVideoUrl: 'Video URL',
+      lessonDuration: 'Duration (in minutes)',
+      removeLesson: 'Remove',
+      cancel: 'Cancel',
+      save: 'Save',
+      saving: 'Saving...',
+      addCategory: 'Add',
+      categoryName: 'Category Name',
+      fillCourseTitle: 'Please fill in the course title',
+      fillCourseDescription: 'Please fill in the course description',
+      fillOriginalPrice: 'Please specify the original price',
+      selectCategoryError: 'Please select a category',
+      courseUpdated: 'Course updated successfully!',
+      courseCreated: 'Course created successfully!',
+      errorPrefix: 'Error: ',
+      saveError: 'Save error: ',
+      programming: 'Programming',
+      design: 'Design',
+      marketing: 'Marketing',
+      business: 'Business',
+      ai: 'Artificial Intelligence',
+      dataScience: 'Data Science',
+      other: 'Other'
+    }
+  }
+
+  const t = translations[locale as keyof typeof translations]
+
+  // Category management with localized names
+  const getLocalizedCategories = () => [
+    { id: 'programming', name: t.programming },
+    { id: 'design', name: t.design },
+    { id: 'marketing', name: t.marketing },
+    { id: 'business', name: t.business },
+    { id: 'ai', name: t.ai },
+    { id: 'data-science', name: t.dataScience },
+    { id: 'other', name: t.other }
+  ]
+
+  const [categories, setCategories] = useState<Category[]>(getLocalizedCategories())
   const [newCategoryName, setNewCategoryName] = useState('')
 
-  // Состояние формы
+  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -82,6 +240,11 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     newUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     lessons: [] as Lesson[]
   })
+
+  // Update categories when locale changes
+  useEffect(() => {
+    setCategories(getLocalizedCategories())
+  }, [locale])
 
   useEffect(() => {
     fetchCourses()
@@ -137,25 +300,25 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     }
   }
 
-  // Валидация формы
+  // Form validation
   const validateForm = () => {
     if (!formData.title.trim()) {
-      alert('Заполните название курса')
+      alert(t.fillCourseTitle)
       return false
     }
     
     if (!formData.description.trim()) {
-      alert('Заполните описание курса')
+      alert(t.fillCourseDescription)
       return false
     }
     
     if (!formData.originalPrice) {
-      alert('Укажите первоначальную цену')
+      alert(t.fillOriginalPrice)
       return false
     }
     
     if (!formData.category) {
-      alert('Выберите категорию')
+      alert(t.selectCategoryError)
       return false
     }
     
@@ -172,7 +335,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     try {
       setSubmitting(true)
       
-      // Подготавливаем данные
+      // Prepare data
       const submitData = {
         title: formData.title,
         description: formData.description,
@@ -181,7 +344,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
         price: formData.price ? parseFloat(formData.price) : parseFloat(formData.originalPrice),
         category: formData.category,
         imageUrl: formData.imageUrl || '/images/course-placeholder.jpg',
-        published: false, // Создаем как черновик
+        published: false, // Create as draft
         featured: false,
         isNewCourse: formData.isNewCourse,
         newUntil: formData.newUntil,
@@ -203,7 +366,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       })
 
       if (response.ok) {
-        alert(editingCourse ? 'Курс успешно обновлен!' : 'Курс успешно создан!')
+        alert(editingCourse ? t.courseUpdated : t.courseCreated)
         setShowCreateModal(false)
         setShowEditModal(false)
         setEditingCourse(null)
@@ -211,11 +374,11 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
         fetchCourses()
       } else {
         const errorData = await response.json()
-        alert('Ошибка: ' + errorData.error)
+        alert(t.errorPrefix + errorData.error)
       }
     } catch (error) {
       console.error('Error saving course:', error)
-      alert('Ошибка сохранения: ' + error)
+      alert(t.saveError + error)
     } finally {
       setSubmitting(false)
     }
@@ -247,7 +410,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
   }
 
   const handleDelete = async (courseId: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этот курс?')) return
+    if (!confirm(t.confirmDelete)) return
 
     try {
       const response = await fetch(`/api/admin/courses/${courseId}`, {
@@ -255,7 +418,6 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       })
 
       if (response.ok) {
-        alert('Курс успешно удален!')
         fetchCourses()
       }
     } catch (error) {
@@ -263,16 +425,13 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     }
   }
 
-  // Переключение публикации
   const togglePublish = async (courseId: string) => {
     try {
-      const response = await fetch(`/api/admin/courses/${courseId}/publish`, {
+      const response = await fetch(`/api/admin/courses/${courseId}/toggle-publish`, {
         method: 'POST'
       })
 
       if (response.ok) {
-        const data = await response.json()
-        alert(data.message)
         fetchCourses()
       }
     } catch (error) {
@@ -280,35 +439,24 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     }
   }
 
-  // Переключение метки "новый"
   const toggleNew = async (courseId: string, currentIsNew: boolean) => {
     try {
-      const course = courses.find(c => c._id === courseId)
-      if (!course) return
+      const newUntilDate = currentIsNew 
+        ? new Date().toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-      const response = await fetch(`/api/admin/courses/${courseId}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/admin/courses/${courseId}/toggle-new`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          title: course.title,
-          description: course.description,
-          language: course.language,
-          originalPrice: course.originalPrice,
-          price: course.price,
-          category: course.category,
-          imageUrl: course.imageUrl,
-          published: course.published,
-          featured: course.featured,
           isNewCourse: !currentIsNew,
-          newUntil: !currentIsNew ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
-          lessons: []
+          newUntil: newUntilDate
         })
       })
 
       if (response.ok) {
-        alert(currentIsNew ? 'Метка "новый" удалена' : 'Курс помечен как новый')
         fetchCourses()
       }
     } catch (error) {
@@ -349,7 +497,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
   const updateLesson = (lessonId: string, updates: Partial<Lesson>) => {
     setFormData(prev => ({
       ...prev,
-      lessons: prev.lessons.map(lesson =>
+      lessons: prev.lessons.map(lesson => 
         lesson.id === lessonId ? { ...lesson, ...updates } : lesson
       )
     }))
@@ -362,34 +510,31 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     }))
   }
 
-  // Управление категориями
+  // Category management
   const addCategory = () => {
-    if (!newCategoryName.trim()) return
-    
-    const newCategory: Category = {
-      id: newCategoryName.toLowerCase().replace(/\s+/g, '-'),
-      name: newCategoryName.trim()
+    if (newCategoryName.trim()) {
+      setCategories(prev => [...prev, {
+        id: newCategoryName.toLowerCase().replace(/\s+/g, '-'),
+        name: newCategoryName
+      }])
+      setNewCategoryName('')
     }
-    
-    setCategories(prev => [...prev, newCategory])
-    setNewCategoryName('')
   }
 
   const deleteCategory = (categoryId: string) => {
-    if (categoryId === 'other') return
     setCategories(prev => prev.filter(cat => cat.id !== categoryId))
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU')
+    return new Date(dateString).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')
   }
 
   const formatPrice = (price: number) => {
-    return `${price.toLocaleString('ru-RU')} ₽`
+    return `$${price}`
   }
 
   const getLanguageLabel = (lang: 'ru' | 'en') => {
-    return lang === 'ru' ? '🇷🇺 Русский' : '🇺🇸 English'
+    return lang === 'ru' ? '🇷🇺 RU' : '🇺🇸 EN'
   }
 
   return (
@@ -400,13 +545,13 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
         transition={{ duration: 0.5 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-white">Управление курсами</h1>
+          <h1 className="text-3xl font-bold text-white">{t.title}</h1>
           <div className="flex space-x-4">
             <button
               onClick={() => setShowCategoryModal(true)}
               className="btn-secondary px-4 py-2"
             >
-              Управление категориями
+              {t.manageCategories}
             </button>
             <button
               onClick={() => {
@@ -415,18 +560,18 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
               }}
               className="btn-primary px-6 py-3"
             >
-              Добавить курс
+              {t.addCourse}
             </button>
           </div>
         </div>
 
-        {/* Поиск и фильтры */}
+        {/* Search and filters */}
         <div className="glassmorphism rounded-xl p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Поиск курсов..."
+                placeholder={t.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-primary-500"
@@ -438,9 +583,9 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
               >
-                <option value="all">Все статусы</option>
-                <option value="published">Опубликованные</option>
-                <option value="draft">Черновики</option>
+                <option value="all">{t.allStatuses}</option>
+                <option value="published">{t.published}</option>
+                <option value="draft">{t.drafts}</option>
               </select>
             </div>
             <div>
@@ -449,36 +594,36 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                 onChange={(e) => setLanguageFilter(e.target.value)}
                 className="px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
               >
-                <option value="all">Все языки</option>
-                <option value="ru">Русский</option>
-                <option value="en">English</option>
+                <option value="all">{t.allLanguages}</option>
+                <option value="ru">{t.russian}</option>
+                <option value="en">{t.english}</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Таблица курсов */}
+        {/* Courses table */}
         <div className="glassmorphism rounded-xl overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-              <p className="text-white/70">Загрузка...</p>
+              <p className="text-white/70">{t.loading}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left p-4 text-white/70 font-medium">Изображение</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Название</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Язык</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Категория</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Цена</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Уроки</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Статус</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Метки</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Обновлен</th>
-                    <th className="text-left p-4 text-white/70 font-medium">Действия</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.image}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.titleColumn}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.language}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.category}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.price}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.lessons}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.status}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.labels}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.updated}</th>
+                    <th className="text-left p-4 text-white/70 font-medium">{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -527,7 +672,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                               ? 'bg-green-500/20 text-green-300' 
                               : 'bg-yellow-500/20 text-yellow-300'
                           }`}>
-                            {course.published ? 'Опубликован' : 'Черновик'}
+                            {course.published ? t.published : t.draft}
                           </span>
                           {course.publishedAt && (
                             <span className="text-white/50 text-xs">
@@ -540,12 +685,12 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                         <div className="flex flex-col space-y-1">
                           {course.isStillNew && (
                             <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded text-xs">
-                              ✨ Новый
+                              ✨ {t.new}
                             </span>
                           )}
                           {course.featured && (
                             <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded text-xs">
-                              🔥 Хит
+                              🔥 {t.hot}
                             </span>
                           )}
                           {course.isNewCourse && (
@@ -568,7 +713,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                                 : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
                             }`}
                           >
-                            {course.published ? 'Снять' : 'Опубликовать'}
+                            {course.published ? t.unpublish : t.publish}
                           </button>
                           <button
                             onClick={() => toggleNew(course._id, course.isNewCourse)}
@@ -578,19 +723,19 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                                 : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
                             }`}
                           >
-                            {course.isNewCourse ? 'Убрать NEW' : 'Пометить NEW'}
+                            {course.isNewCourse ? t.removeNew : t.markNew}
                           </button>
                           <button
                             onClick={() => handleEdit(course)}
                             className="text-blue-400 hover:text-blue-300 text-sm"
                           >
-                            Редактировать
+                            {t.edit}
                           </button>
                           <button
                             onClick={() => handleDelete(course._id)}
                             className="text-red-400 hover:text-red-300 text-sm"
                           >
-                            Удалить
+                            {t.delete}
                           </button>
                         </div>
                       </td>
@@ -600,327 +745,294 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
               </table>
             </div>
           )}
-
-          {totalPages > 1 && (
-            <div className="p-4 border-t border-white/10 flex justify-center space-x-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === page
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-dark-200 text-white/70 hover:bg-dark-100'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
-      </motion.div>
 
-      {/* Модальное окно управления категориями */}
-      {showCategoryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-300 rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-white mb-6">Управление категориями</h2>
-            
-            <div className="mb-6">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Название категории"
-                  className="flex-1 px-4 py-2 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                />
-                <button
-                  onClick={addCategory}
-                  className="btn-primary px-4 py-2"
-                >
-                  Добавить
-                </button>
+        {/* Category management modal */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-dark-200 p-8 rounded-xl max-w-md w-full mx-4"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6">{t.manageCategories}</h2>
+              
+              {/* Add new category */}
+              <div className="mb-6">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder={t.categoryName}
+                    className="flex-1 px-3 py-2 bg-dark-300 border border-white/10 rounded text-white placeholder-white/50"
+                  />
+                  <button onClick={addCategory} className="btn-primary px-4 py-2">
+                    {t.addCategory}
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-2 mb-6">
-              {categories.map((category) => (
-                <div key={category.id} className="flex items-center justify-between bg-dark-200 p-3 rounded">
-                  <span className="text-white">{category.name}</span>
-                  {category.id !== 'other' && (
+
+              {/* Category list */}
+              <div className="space-y-2 mb-6">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center justify-between p-2 bg-dark-300 rounded">
+                    <span className="text-white">{category.name}</span>
                     <button
                       onClick={() => deleteCategory(category.id)}
                       className="text-red-400 hover:text-red-300 text-sm"
                     >
-                      Удалить
+                      {t.delete}
                     </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowCategoryModal(false)}
-                className="btn-secondary px-6 py-3"
-              >
-                Закрыть
-              </button>
-            </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowCategoryModal(false)}
+                  className="btn-secondary px-6 py-2"
+                >
+                  {t.cancel}
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Модальное окно создания/редактирования курса */}
-      {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-300 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              {editingCourse ? 'Редактировать курс' : 'Создать курс'}
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Основная информация */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-white/70 mb-2">Название курса *</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                    placeholder="Введите название курса"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-white/70 mb-2">Язык курса *</label>
-                  <select
-                    value={formData.language}
-                    onChange={(e) => setFormData(prev => ({ ...prev, language: e.target.value as 'ru' | 'en' }))}
-                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                  >
-                    <option value="ru">🇷🇺 Русский</option>
-                    <option value="en">🇺🇸 English</option>
-                  </select>
-                </div>
-              </div>
+        {/* Create/Edit course modal */}
+        {(showCreateModal || showEditModal) && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-dark-200 p-8 rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6">
+                {editingCourse ? t.editCourse : t.createCourse}
+              </h2>
 
-              {/* Описание */}
-              <div>
-                <label className="block text-white/70 mb-2">Описание курса *</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={4}
-                  className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                  placeholder="Введите описание курса"
-                />
-              </div>
-
-              {/* Цена и категория */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-white/70 mb-2">Первоначальная цена *</label>
-                  <input
-                    type="number"
-                    value={formData.originalPrice}
-                    onChange={(e) => setFormData(prev => ({ ...prev, originalPrice: e.target.value }))}
-                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                    placeholder="₽"
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-white/70 mb-2">Цена со скидкой</label>
-                  <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                    placeholder="₽ (опционально)"
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-white/70 mb-2">Категория *</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                  >
-                    <option value="">Выберите категорию</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Управление метками */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.isNewCourse}
-                      onChange={(e) => setFormData(prev => ({ ...prev, isNewCourse: e.target.checked }))}
-                      className="w-5 h-5 text-primary-500"
-                    />
-                    <span className="text-white/70">Пометить как новый курс</span>
-                  </label>
-                </div>
-                
-                {formData.isNewCourse && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-white/70 mb-2">Новый до даты</label>
+                    <label className="block text-white mb-2">{t.courseTitle}</label>
                     <input
-                      type="date"
-                      value={formData.newUntil}
-                      onChange={(e) => setFormData(prev => ({ ...prev, newUntil: e.target.value }))}
-                      className="w-full px-4 py-3 bg-dark-200 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder={t.courseTitlePlaceholder}
+                      className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white placeholder-white/50"
+                      required
                     />
                   </div>
-                )}
-              </div>
 
-              {/* Изображение */}
-              <div>
-                <label className="block text-white/70 mb-2">Изображение курса</label>
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="imageUpload"
+                  <div>
+                    <label className="block text-white mb-2">{t.courseLanguage}</label>
+                    <select
+                      value={formData.language}
+                      onChange={(e) => setFormData(prev => ({ ...prev, language: e.target.value as 'ru' | 'en' }))}
+                      className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white"
+                    >
+                      <option value="ru">{t.russian}</option>
+                      <option value="en">{t.english}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-white mb-2">{t.courseDescription}</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder={t.courseDescriptionPlaceholder}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white placeholder-white/50"
+                    required
                   />
-                  <label
-                    htmlFor="imageUpload"
-                    className="btn-secondary px-4 py-2 cursor-pointer"
-                  >
-                    {uploading ? 'Загрузка...' : 'Загрузить изображение'}
-                  </label>
-                  {formData.imageUrl && (
-                    <div className="flex items-center space-x-2">
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-white mb-2">{t.category}</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white"
+                      required
+                    >
+                      <option value="">{t.selectCategory}</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-white mb-2">{t.originalPrice}</label>
+                    <input
+                      type="number"
+                      value={formData.originalPrice}
+                      onChange={(e) => setFormData(prev => ({ ...prev, originalPrice: e.target.value }))}
+                      className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white mb-2">{t.currentPrice}</label>
+                    <input
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                      className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                {/* Image upload */}
+                <div>
+                  <label className="block text-white mb-2">{t.courseImage}</label>
+                  <div className="space-y-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="w-full px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white"
+                    />
+                    {uploading && <p className="text-blue-400">{t.uploading}</p>}
+                    {formData.imageUrl && (
                       <img
                         src={formData.imageUrl}
-                        alt="Preview"
-                        className="w-20 h-16 object-cover rounded-lg"
+                        alt="Course preview"
+                        className="w-32 h-24 object-cover rounded-lg"
                       />
-                      <span className="text-green-400 text-sm">✓ Загружено</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Course labels */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isNewCourse"
+                      checked={formData.isNewCourse}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isNewCourse: e.target.checked }))}
+                      className="rounded"
+                    />
+                    <label htmlFor="isNewCourse" className="text-white">
+                      {t.markAsNew}
+                    </label>
+                  </div>
+
+                  {formData.isNewCourse && (
+                    <div>
+                      <label className="block text-white mb-2">{t.newUntil}</label>
+                      <input
+                        type="date"
+                        value={formData.newUntil}
+                        onChange={(e) => setFormData(prev => ({ ...prev, newUntil: e.target.value }))}
+                        className="px-4 py-3 bg-dark-300 border border-white/10 rounded-lg text-white"
+                      />
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Управление уроками */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white">Управление уроками</h3>
+                {/* Lesson management */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-white">{t.lessonManagement}</h3>
+                  
                   <button
                     type="button"
                     onClick={addLesson}
                     className="btn-secondary px-4 py-2"
                   >
-                    Добавить урок
+                    {t.addLesson}
                   </button>
-                </div>
-                
-                <div className="space-y-4">
-                  {formData.lessons.map((lesson, index) => (
-                    <div key={lesson.id} className="bg-dark-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-white font-medium">Урок {index + 1}</h4>
-                        <button
-                          type="button"
-                          onClick={() => removeLesson(lesson.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Удалить
-                        </button>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-white/70 mb-1">Название урока</label>
+
+                  <div className="space-y-4">
+                    {formData.lessons.map((lesson, index) => (
+                      <div key={lesson.id} className="p-4 bg-dark-300 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <input
                             type="text"
+                            placeholder={t.lessonTitle}
                             value={lesson.title}
                             onChange={(e) => updateLesson(lesson.id, { title: e.target.value })}
-                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                            placeholder="Название урока"
+                            className="px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
                           />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-white/70 mb-1">Длительность (мин)</label>
                           <input
                             type="number"
+                            placeholder={t.lessonDuration}
                             value={lesson.duration || ''}
-                            onChange={(e) => updateLesson(lesson.id, { duration: Number(e.target.value) })}
-                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                            placeholder="40"
+                            onChange={(e) => updateLesson(lesson.id, { duration: parseInt(e.target.value) || 0 })}
+                            className="px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
                           />
                         </div>
                         
-                        <div className="md:col-span-2">
-                          <label className="block text-white/70 mb-1">URL видео</label>
+                        <textarea
+                          placeholder={t.lessonDescription}
+                          value={lesson.description || ''}
+                          onChange={(e) => updateLesson(lesson.id, { description: e.target.value })}
+                          className="w-full mb-4 px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
+                          rows={2}
+                        />
+                        
+                        <div className="flex items-center space-x-4">
                           <input
                             type="url"
+                            placeholder={t.lessonVideoUrl}
                             value={lesson.videoUrl || ''}
                             onChange={(e) => updateLesson(lesson.id, { videoUrl: e.target.value })}
-                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                            placeholder="https://youtube.com/watch?v=..."
+                            className="flex-1 px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
                           />
-                        </div>
-                        
-                        <div className="md:col-span-2">
-                          <label className="block text-white/70 mb-1">Описание урока</label>
-                          <textarea
-                            value={lesson.description || ''}
-                            onChange={(e) => updateLesson(lesson.id, { description: e.target.value })}
-                            rows={3}
-                            className="w-full px-3 py-2 bg-dark-300 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500"
-                            placeholder="Описание урока"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => removeLesson(lesson.id)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            {t.removeLesson}
+                          </button>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Кнопки */}
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false)
-                    setShowEditModal(false)
-                    setEditingCourse(null)
-                    resetForm()
-                  }}
-                  className="btn-secondary px-6 py-3"
-                >
-                  Отменить
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Сохранение...' : (editingCourse ? 'Сохранить' : 'Создать')}
-                </button>
-              </div>
-            </form>
+                {/* Form actions */}
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setShowEditModal(false)
+                      setEditingCourse(null)
+                      resetForm()
+                    }}
+                    className="btn-secondary px-6 py-3"
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="btn-primary px-6 py-3"
+                  >
+                    {submitting ? t.saving : t.save}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </motion.div>
     </div>
   )
 } 
