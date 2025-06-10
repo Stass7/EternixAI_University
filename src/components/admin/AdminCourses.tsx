@@ -427,7 +427,7 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
 
   const togglePublish = async (courseId: string) => {
     try {
-      const response = await fetch(`/api/admin/courses/${courseId}/toggle-publish`, {
+      const response = await fetch(`/api/admin/courses/${courseId}/publish`, {
         method: 'POST'
       })
 
