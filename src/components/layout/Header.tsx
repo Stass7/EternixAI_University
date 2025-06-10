@@ -139,7 +139,7 @@ export default function Header({ locale }: HeaderProps) {
                     {session.user.name?.charAt(0) || session.user.email?.charAt(0)}
                   </div>
                   <span className="text-white text-sm font-medium hidden sm:block">
-                    {session.user.name || locale === 'ru' ? 'Профиль' : 'Profile'}
+                    {session.user.name || (locale === 'ru' ? 'Профиль' : 'Profile')}
                   </span>
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
