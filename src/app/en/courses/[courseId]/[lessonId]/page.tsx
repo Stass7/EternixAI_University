@@ -5,6 +5,7 @@ import { checkLessonAccess } from '@/lib/course-access'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth/config'
 import BuyButton from '@/components/courses/BuyButton'
+import BunnyVideoPlayer from '@/components/courses/BunnyVideoPlayer'
 import connectToDatabase from '@/lib/db/mongodb'
 import User from '@/models/User'
 import Course from '@/models/Course'
@@ -17,7 +18,8 @@ interface Lesson {
   id: string
   title: string
   description?: string
-  videoUrl?: string
+  videoUrl?: string // Legacy YouTube URL
+  bunnyVideoId?: string // Bunny Stream Video ID
   duration?: number
   order: number
   isNewLesson: boolean
@@ -89,8 +91,8 @@ async function getCourseData(courseId: string): Promise<Course | null> {
     console.log('isSuperAdmin:', isSuperAdmin)
     console.log('isAdmin:', isAdmin)
     console.log('Course has lessons:', course.lessons?.length || 0)
-    console.log('First lesson has videoUrl:', !!course.lessons?.[0]?.videoUrl)
-    console.log('First lesson videoUrl:', course.lessons?.[0]?.videoUrl || 'EMPTY')
+    console.log('First lesson has bunnyVideoId:', !!course.lessons?.[0]?.bunnyVideoId)
+    console.log('First lesson bunnyVideoId:', course.lessons?.[0]?.bunnyVideoId || 'EMPTY')
 
     // Форматируем данные курса для возврата
     return {
@@ -114,15 +116,6 @@ async function getCourseData(courseId: string): Promise<Course | null> {
     console.error('Error fetching course from DB:', error)
     return null
   }
-}
-
-function extractYouTubeVideoId(url: string): string | null {
-  if (!url) return null
-  
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-  const match = url.match(regExp)
-  
-  return match && match[2].length === 11 ? match[2] : null
 }
 
 export async function generateMetadata({ params }: LessonPageProps): Promise<Metadata> {
@@ -187,8 +180,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null
   const nextLesson = currentIndex < sortedLessons.length - 1 ? sortedLessons[currentIndex + 1] : null
 
-  const videoId = extractYouTubeVideoId(currentLesson.videoUrl || '')
-
   const formatPrice = (price: number) => {
     return `$${price}`
   }
@@ -201,8 +192,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
           <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded-lg text-white">
             <h4 className="font-bold text-red-400">🔧 ADMIN DEBUG INFO:</h4>
             <p>Access Result: {JSON.stringify(accessResult)}</p>
-            <p>Current Lesson VideoURL: {currentLesson.videoUrl || 'NULL/EMPTY'}</p>
-            <p>Extracted Video ID: {videoId || 'NULL/EMPTY'}</p>
+            <p>Current Lesson Bunny Video ID: {currentLesson.bunnyVideoId || 'NULL/EMPTY'}</p>
+            <p>Current Lesson Legacy YouTube URL: {currentLesson.videoUrl || 'NULL/EMPTY'}</p>
             <p>User Role: {isAdmin ? 'ADMIN' : 'USER'}</p>
             <p>Has Access: {accessResult.hasAccess ? 'TRUE' : 'FALSE'}</p>
           </div>
@@ -230,67 +221,28 @@ export default async function LessonPage({ params }: LessonPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main content - video */}
           <div className="lg:col-span-3">
-            {/* Video player or paywall */}
+            {/* Video player */}
             <div className="glassmorphism rounded-xl overflow-hidden mb-8">
-              {/* FORCED ACCESS FOR ADMINISTRATORS */}
-              {(accessResult.hasAccess || isAdmin) ? (
-                // Show video if has access OR user is admin
-                videoId ? (
-                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                    <iframe
-                      src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
-                      title={currentLesson.title}
-                      className="absolute top-0 left-0 w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-96 bg-slate-800 flex items-center justify-center">
-                    <div className="text-center text-white/60">
-                      <div className="text-6xl mb-4">📹</div>
-                      <p className="text-xl">Video unavailable</p>
-                      <p className="text-sm mt-2">
-                        {isAdmin ? 
-                          `ADMIN: Lesson URL is empty - add video URL in admin panel` : 
-                          'Video link not found'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                )
+              {currentLesson.bunnyVideoId ? (
+                <BunnyVideoPlayer
+                  videoId={currentLesson.bunnyVideoId}
+                  title={currentLesson.title}
+                  hasAccess={accessResult.hasAccess || isAdmin}
+                  courseId={course._id}
+                  lessonId={currentLesson.id}
+                  showPaywall={!accessResult.hasAccess && !isAdmin}
+                />
               ) : (
-                // Paywall for unpurchased course
-                <div className="w-full h-96 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                  <div className="text-center text-white p-8 max-w-md">
-                    <div className="text-6xl mb-6">🔒</div>
-                    <h3 className="text-2xl font-bold mb-4">Purchase the course to access it</h3>
-                    <p className="text-white/70 mb-6">
-                      This lesson is only available after purchasing the course "{course.title}"
+                <div className="w-full h-96 bg-slate-800 flex items-center justify-center">
+                  <div className="text-center text-white/60">
+                    <div className="text-6xl mb-4">📹</div>
+                    <p className="text-xl">Video not configured</p>
+                    <p className="text-sm mt-2">
+                      {isAdmin ? 
+                        `ADMIN: Add Bunny Video ID in admin panel` : 
+                        'Video will be available soon'
+                      }
                     </p>
-                    <div className="space-y-3">
-                      {isAuthenticated ? (
-                        <BuyButton 
-                          courseId={course._id}
-                          courseTitle={course.title}
-                          price={course.price}
-                          locale="en"
-                        />
-                      ) : (
-                        <Link
-                          href="/en/auth/signin"
-                          className="btn-primary px-6 py-3 inline-block"
-                        >
-                          Sign In to Purchase
-                        </Link>
-                      )}
-                      <Link
-                        href={`/en/courses/${course._id}`}
-                        className="btn-secondary px-6 py-3 block"
-                      >
-                        ← Course Overview
-                      </Link>
-                    </div>
                   </div>
                 </div>
               )}

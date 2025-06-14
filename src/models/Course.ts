@@ -5,7 +5,8 @@ interface ILesson {
   id: string;
   title: string;
   description?: string;
-  videoUrl?: string;
+  videoUrl?: string; // Legacy YouTube URL (для обратной совместимости)
+  bunnyVideoId?: string; // Bunny Stream Video ID
   duration?: number; // в минутах
   order: number;
   isNewLesson: boolean; // Метка "новый урок" (переименовано)
@@ -28,6 +29,10 @@ const LessonSchema = new Schema({
   },
   videoUrl: { 
     type: String, 
+    default: '',
+  },
+  bunnyVideoId: {
+    type: String,
     default: '',
   },
   duration: { 

@@ -32,7 +32,8 @@ interface Lesson {
   id: string
   title: string
   description?: string
-  videoUrl?: string
+  videoUrl?: string // Legacy YouTube URL
+  bunnyVideoId?: string // Bunny Stream Video ID
   duration?: number
   order: number
 }
@@ -110,7 +111,8 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       addLesson: 'Добавить урок',
       lessonTitle: 'Название урока',
       lessonDescription: 'Описание урока',
-      lessonVideoUrl: 'Ссылка на видео',
+      lessonVideoUrl: 'Ссылка на видео (YouTube - legacy)',
+      bunnyVideoId: 'Bunny Stream Video ID',
       lessonDuration: 'Длительность (в минутах)',
       removeLesson: 'Удалить',
       cancel: 'Отмена',
@@ -185,7 +187,8 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       addLesson: 'Add Lesson',
       lessonTitle: 'Lesson Title',
       lessonDescription: 'Lesson Description',
-      lessonVideoUrl: 'Video URL',
+      lessonVideoUrl: 'Video URL (YouTube - legacy)',
+      bunnyVideoId: 'Bunny Stream Video ID',
       lessonDuration: 'Duration (in minutes)',
       removeLesson: 'Remove',
       cancel: 'Cancel',
@@ -985,21 +988,30 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                           rows={2}
                         />
                         
-                        <div className="flex items-center space-x-4">
+                        <div className="space-y-3">
+                          <input
+                            type="text"
+                            placeholder={t.bunnyVideoId}
+                            value={lesson.bunnyVideoId || ''}
+                            onChange={(e) => updateLesson(lesson.id, { bunnyVideoId: e.target.value })}
+                            className="w-full px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
+                          />
                           <input
                             type="url"
                             placeholder={t.lessonVideoUrl}
                             value={lesson.videoUrl || ''}
                             onChange={(e) => updateLesson(lesson.id, { videoUrl: e.target.value })}
-                            className="flex-1 px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
+                            className="w-full px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
                           />
-                          <button
-                            type="button"
-                            onClick={() => removeLesson(lesson.id)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            {t.removeLesson}
-                          </button>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => removeLesson(lesson.id)}
+                              className="text-red-400 hover:text-red-300 px-3 py-1"
+                            >
+                              {t.removeLesson}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
