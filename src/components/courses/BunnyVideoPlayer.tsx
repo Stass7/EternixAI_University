@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getBunnyThumbnailUrl } from '@/lib/bunny-stream'
 
 interface BunnyVideoPlayerProps {
   videoId: string
@@ -52,46 +51,45 @@ export default function BunnyVideoPlayer({
   lessonId,
   showPaywall = true 
 }: BunnyVideoPlayerProps) {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [embedToken, setEmbedToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Получаем защищённый URL для видео
+  // Получаем embed токен для защищённого доступа
   useEffect(() => {
     if (!hasAccess) {
       setLoading(false)
       return
     }
 
-    const fetchSecureUrl = async () => {
+    const fetchEmbedToken = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/video/secure-url/${videoId}`, {
+        const response = await fetch(`/api/video/embed-token/${videoId}`, {
           headers: {
             'Content-Type': 'application/json'
           }
         })
 
         if (!response.ok) {
-          throw new Error('Failed to get video URL')
+          throw new Error('Failed to get embed token')
         }
 
         const data = await response.json()
-        if (data.url) {
-          setVideoUrl(data.url)
+        if (data.token) {
+          setEmbedToken(data.token)
         } else {
-          setError('Video URL not available')
+          setError('Embed token not available')
         }
       } catch (err) {
-        console.error('Error fetching video URL:', err)
+        console.error('Error fetching embed token:', err)
         setError('Failed to load video')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchSecureUrl()
+    fetchEmbedToken()
   }, [videoId, hasAccess])
 
   // Если нет доступа, показываем paywall
@@ -139,8 +137,8 @@ export default function BunnyVideoPlayer({
     )
   }
 
-  // Если видео не найдено
-  if (!videoUrl) {
+  // Если токен не получен
+  if (!embedToken) {
     return (
       <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
         <div className="absolute inset-0 bg-slate-800 rounded-xl flex items-center justify-center">
@@ -154,7 +152,10 @@ export default function BunnyVideoPlayer({
     )
   }
 
-  // Показываем видео
+  // Показываем Bunny Stream iframe плеер
+  const libraryId = process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID || '454060'
+  const embedUrl = `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?token=${embedToken}&autoplay=false&preload=true`
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -163,25 +164,15 @@ export default function BunnyVideoPlayer({
       className="relative w-full"
       style={{ paddingBottom: '56.25%' }}
     >
-      <video
-        ref={videoRef}
+      <iframe
+        src={embedUrl}
         className="absolute inset-0 w-full h-full rounded-xl"
-        controls
-        preload="metadata"
-        poster={getBunnyThumbnailUrl(videoId)}
-        onLoadStart={() => setLoading(false)}
-        onError={() => setError('Failed to play video')}
-      >
-        <source src={videoUrl} type="application/x-mpegURL" />
-        <p className="text-white/70">
-          Your browser doesn't support HLS video playback.
-        </p>
-      </video>
-      
-      {/* Overlay с информацией о видео */}
-      <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
-        <p className="text-white text-sm font-medium">{title}</p>
-      </div>
+        style={{ border: 'none' }}
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+        loading="lazy"
+        title={title}
+      />
     </motion.div>
   )
 } 
