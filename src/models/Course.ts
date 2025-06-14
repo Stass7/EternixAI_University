@@ -3,10 +3,11 @@ import mongoose, { Schema, Document } from 'mongoose'
 // Интерфейс для файла урока
 interface ILessonFile {
   id: string;
-  filename: string;
+  name: string;
   originalName: string;
   mimeType: string;
   size: number;
+  data: string; // base64 encoded file data
   uploadedAt: Date;
 }
 
@@ -29,9 +30,10 @@ const LessonFileSchema = new Schema({
     type: String,
     required: true,
   },
-  filename: {
+  name: {
     type: String,
     required: true,
+    trim: true,
   },
   originalName: {
     type: String,
@@ -43,6 +45,10 @@ const LessonFileSchema = new Schema({
   },
   size: {
     type: Number,
+    required: true,
+  },
+  data: {
+    type: String,
     required: true,
   },
   uploadedAt: {
@@ -206,4 +212,5 @@ CourseSchema.set('toObject', { virtuals: true })
 // Проверка существования модели
 const Course = mongoose.models.Course || mongoose.model<ICourse>('Course', CourseSchema)
 
-export default Course 
+export default Course
+export type { ILessonFile } 

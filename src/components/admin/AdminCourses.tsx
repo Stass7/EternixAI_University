@@ -30,10 +30,11 @@ interface Course {
 
 interface LessonFile {
   id: string
-  filename: string
+  name: string
   originalName: string
   mimeType: string
   size: number
+  data: string // base64 encoded file data
   uploadedAt: Date
 }
 
@@ -67,8 +68,6 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({})
-  const [deletingFiles, setDeletingFiles] = useState<{[key: string]: boolean}>({})
 
   // Translations object for localization
   const translations = {
@@ -127,14 +126,9 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       bunnyVideoId: 'Bunny Stream Video ID',
       lessonDuration: 'Длительность (в минутах)',
       lessonFiles: 'Файлы урока',
-      uploadFile: 'Загрузить файл',
-      uploadingFile: 'Загрузка файла...',
-      deleteFile: 'Удалить файл',
-      downloadFile: 'Скачать',
-      noFiles: 'Файлы не загружены',
-      fileUploaded: 'Файл успешно загружен!',
-      fileDeleted: 'Файл удален!',
-      fileError: 'Ошибка при работе с файлом: ',
+      uploadFiles: 'Загрузить файлы',
+      supportedFormats: 'Поддерживаемые форматы: PDF, DOC, DOCX, TXT, PPT, PPTX',
+      removeFile: 'Удалить файл',
       removeLesson: 'Удалить',
       cancel: 'Отмена',
       save: 'Сохранить',
@@ -212,14 +206,9 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       bunnyVideoId: 'Bunny Stream Video ID',
       lessonDuration: 'Duration (in minutes)',
       lessonFiles: 'Lesson Files',
-      uploadFile: 'Upload File',
-      uploadingFile: 'Uploading file...',
-      deleteFile: 'Delete File',
-      downloadFile: 'Download',
-      noFiles: 'No files uploaded',
-      fileUploaded: 'File uploaded successfully!',
-      fileDeleted: 'File deleted!',
-      fileError: 'File error: ',
+      uploadFiles: 'Upload Files',
+      supportedFormats: 'Supported formats: PDF, DOC, DOCX, TXT, PPT, PPTX',
+      removeFile: 'Remove File',
       removeLesson: 'Remove',
       cancel: 'Cancel',
       save: 'Save',
@@ -519,7 +508,8 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
       description: '',
       videoUrl: '',
       duration: 0,
-      order: formData.lessons.length + 1
+      order: formData.lessons.length + 1,
+      files: []
     }
     setFormData(prev => ({
       ...prev,
@@ -543,88 +533,75 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     }))
   }
 
-  // Загрузка файла для урока
-  const handleFileUpload = async (lessonId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !editingCourse) return
+  // File management for lessons
+  const handleLessonFileUpload = async (lessonId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files || files.length === 0) return
 
-    const uploadKey = `${lessonId}_${file.name}`
-    setUploadingFiles(prev => ({ ...prev, [uploadKey]: true }))
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ]
 
-    try {
-      const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
-      uploadFormData.append('courseId', editingCourse._id)
-      uploadFormData.append('lessonId', lessonId)
+    for (const file of Array.from(files)) {
+      if (!allowedTypes.includes(file.type)) {
+        alert(locale === 'ru' ? `Неподдерживаемый тип файла: ${file.name}` : `Unsupported file type: ${file.name}`)
+        continue
+      }
 
-      const response = await fetch('/api/lessons/files/upload', {
-        method: 'POST',
-        body: uploadFormData
-      })
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert(locale === 'ru' ? `Файл слишком большой: ${file.name}. Максимальный размер: 10MB` : `File too large: ${file.name}. Maximum size: 10MB`)
+        continue
+      }
 
-      if (response.ok) {
-        const result = await response.json()
-        
-        // Обновляем урок с новым файлом
-        const currentLesson = formData.lessons.find((l: Lesson) => l.id === lessonId)
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+
+        const lessonFile: LessonFile = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for display
+          originalName: file.name,
+          mimeType: file.type,
+          size: file.size,
+          data: base64,
+          uploadedAt: new Date()
+        }
+
         updateLesson(lessonId, {
           files: [
-            ...(currentLesson?.files || []),
-            result.file
+            ...(formData.lessons.find(l => l.id === lessonId)?.files || []),
+            lessonFile
           ]
         })
-        
-        alert(t.fileUploaded)
-      } else {
-        const error = await response.json()
-        alert(t.fileError + error.error)
+      } catch (error) {
+        console.error('Error uploading file:', error)
+        alert(locale === 'ru' ? `Ошибка загрузки файла: ${file.name}` : `Error uploading file: ${file.name}`)
       }
-    } catch (error) {
-      console.error('Error uploading file:', error)
-      alert(t.fileError + error)
-    } finally {
-      setUploadingFiles(prev => ({ ...prev, [uploadKey]: false }))
-      // Очищаем input
-      event.target.value = ''
     }
+
+    // Clear the input
+    event.target.value = ''
   }
 
-  // Удаление файла урока
-  const handleFileDelete = async (lessonId: string, fileId: string) => {
-    if (!confirm(t.deleteFile + '?')) return
+  const removeLessonFile = (lessonId: string, fileId: string) => {
+    const lesson = formData.lessons.find(l => l.id === lessonId)
+    if (!lesson) return
 
-    const deleteKey = `${lessonId}_${fileId}`
-    setDeletingFiles(prev => ({ ...prev, [deleteKey]: true }))
-
-    try {
-      const response = await fetch(`/api/lessons/files/${fileId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        // Удаляем файл из урока
-        const lesson = formData.lessons.find(l => l.id === lessonId)
-        if (lesson) {
-          updateLesson(lessonId, {
-            files: lesson.files?.filter(f => f.id !== fileId) || []
-          })
-        }
-        
-        alert(t.fileDeleted)
-      } else {
-        const error = await response.json()
-        alert(t.fileError + error.error)
-      }
-    } catch (error) {
-      console.error('Error deleting file:', error)
-      alert(t.fileError + error)
-    } finally {
-      setDeletingFiles(prev => ({ ...prev, [deleteKey]: false }))
-    }
+    updateLesson(lessonId, {
+      files: lesson.files?.filter(f => f.id !== fileId) || []
+    })
   }
 
-  // Форматирование размера файла
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
@@ -632,15 +609,11 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  // Получение иконки файла по типу
-  const getFileIcon = (mimeType: string): string => {
+  const getFileIcon = (mimeType: string) => {
     if (mimeType.includes('pdf')) return '📄'
     if (mimeType.includes('word')) return '📝'
-    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊'
-    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📋'
-    if (mimeType.includes('image')) return '🖼️'
-    if (mimeType.includes('zip') || mimeType.includes('rar')) return '📦'
-    if (mimeType.includes('text')) return '📄'
+    if (mimeType.includes('text')) return '📃'
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📊'
     return '📎'
   }
 
@@ -1135,71 +1108,51 @@ export default function AdminCourses({ locale }: AdminCoursesProps) {
                             className="w-full px-3 py-2 bg-dark-200 border border-white/10 rounded text-white placeholder-white/50"
                           />
                           
-                          {/* Файлы урока */}
-                          <div className="mt-4">
+                          {/* Lesson Files Section */}
+                          <div className="border-t border-white/10 pt-4">
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="text-white font-medium">{t.lessonFiles}</h4>
                               <label className="btn-secondary px-3 py-1 text-sm cursor-pointer">
-                                {t.uploadFile}
+                                {t.uploadFiles}
                                 <input
                                   type="file"
-                                  accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar"
-                                  onChange={(e) => handleFileUpload(lesson.id, e)}
+                                  multiple
+                                  accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+                                  onChange={(e) => handleLessonFileUpload(lesson.id, e)}
                                   className="hidden"
                                 />
                               </label>
                             </div>
+                            <p className="text-white/50 text-xs mb-3">{t.supportedFormats}</p>
                             
-                            {/* Список файлов */}
-                            <div className="space-y-2">
-                              {lesson.files && lesson.files.length > 0 ? (
-                                lesson.files.map((file) => (
-                                  <div key={file.id} className="flex items-center justify-between bg-dark-100 p-3 rounded">
-                                    <div className="flex items-center space-x-3">
-                                      <span className="text-xl">{getFileIcon(file.mimeType)}</span>
+                            {/* Display uploaded files */}
+                            {lesson.files && lesson.files.length > 0 && (
+                              <div className="space-y-2">
+                                {lesson.files.map((file) => (
+                                  <div key={file.id} className="flex items-center justify-between bg-dark-100 rounded p-2">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-lg">{getFileIcon(file.mimeType)}</span>
                                       <div>
-                                        <p className="text-white text-sm font-medium">{file.originalName}</p>
-                                        <p className="text-white/60 text-xs">
-                                          {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString()}
+                                        <p className="text-white text-sm font-medium">{file.name}</p>
+                                        <p className="text-white/50 text-xs">
+                                          {formatFileSize(file.size)} • {file.originalName}
                                         </p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                      <a
-                                        href={`/api/lessons/files/${file.id}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-400 hover:text-blue-300 text-xs px-2 py-1"
-                                      >
-                                        {t.downloadFile}
-                                      </a>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleFileDelete(lesson.id, file.id)}
-                                        disabled={deletingFiles[`${lesson.id}_${file.id}`]}
-                                        className="text-red-400 hover:text-red-300 text-xs px-2 py-1"
-                                      >
-                                        {deletingFiles[`${lesson.id}_${file.id}`] ? '...' : t.deleteFile}
-                                      </button>
-                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeLessonFile(lesson.id, file.id)}
+                                      className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
+                                    >
+                                      {t.removeFile}
+                                    </button>
                                   </div>
-                                ))
-                              ) : (
-                                <p className="text-white/60 text-sm italic">{t.noFiles}</p>
-                              )}
-                            </div>
-                            
-                            {/* Индикатор загрузки файла */}
-                            {Object.entries(uploadingFiles).some(([key, uploading]) => 
-                              key.startsWith(lesson.id) && uploading
-                            ) && (
-                              <div className="mt-2 text-blue-400 text-sm">
-                                {t.uploadingFile}
+                                ))}
                               </div>
                             )}
                           </div>
                           
-                          <div className="flex justify-end mt-4">
+                          <div className="flex justify-end">
                             <button
                               type="button"
                               onClick={() => removeLesson(lesson.id)}
