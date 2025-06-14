@@ -51,15 +51,15 @@ export function generateSecureVideoUrl(
   if (!hasAccess || !videoId) return null
   
   const token = generateSignedToken(videoId, expiresInMinutes)
-  const { cdnHostname, libraryId } = bunnyConfig
+  const { cdnHostname } = bunnyConfig
   
-  return `https://${cdnHostname}/${libraryId}/${videoId}/playlist.m3u8?token=${token}`
+  return `https://${cdnHostname}/${videoId}/playlist.m3u8?token=${token}`
 }
 
 // Получение URL превью/постера
 export function getBunnyThumbnailUrl(videoId: string): string {
-  const { cdnHostname, libraryId } = bunnyConfig
-  return `https://${cdnHostname}/${libraryId}/${videoId}/thumbnail.jpg`
+  const { cdnHostname } = bunnyConfig
+  return `https://${cdnHostname}/${videoId}/thumbnail.jpg`
 }
 
 // API методы для работы с Bunny Stream
