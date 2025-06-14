@@ -52,48 +52,20 @@ export default function BunnyVideoPlayer({
   lessonId,
   showPaywall = true 
 }: BunnyVideoPlayerProps) {
-  const [embedToken, setEmbedToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // Получаем токен для встроенного плеера
+  // Простая инициализация без токенов
   useEffect(() => {
-    if (!hasAccess) {
-      setLoading(false)
-      return
-    }
-
-    const fetchEmbedToken = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/api/video/embed-token/${videoId}`, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to get embed token')
-        }
-
-        const data = await response.json()
-        if (data.token) {
-          setEmbedToken(data.token)
-        } else {
-          // Если токены не требуются, используем плеер без токена
-          setEmbedToken('no-token-required')
-        }
-      } catch (err) {
-        console.error('Error fetching embed token:', err)
-        // Пробуем без токена
-        setEmbedToken('no-token-required')
-      } finally {
+    if (hasAccess && videoId) {
+      // Небольшая задержка для плавной анимации
+      const timer = setTimeout(() => {
         setLoading(false)
-      }
+      }, 500)
+      return () => clearTimeout(timer)
+    } else {
+      setLoading(false)
     }
-
-    fetchEmbedToken()
-  }, [videoId, hasAccess])
+  }, [hasAccess, videoId])
 
   // Если нет доступа, показываем paywall
   if (!hasAccess && showPaywall) {
@@ -125,41 +97,24 @@ export default function BunnyVideoPlayer({
     )
   }
 
-  // Если произошла ошибка
-  if (error) {
-    return (
-      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-        <div className="absolute inset-0 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-500/20">
-          <div className="text-center text-white">
-            <div className="text-4xl mb-4">⚠️</div>
-            <p className="text-red-400 font-semibold mb-2">Video Error</p>
-            <p className="text-white/70 text-sm">{error}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Если токен не получен
-  if (!embedToken) {
+  // Если нет videoId
+  if (!videoId) {
     return (
       <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
         <div className="absolute inset-0 bg-slate-800 rounded-xl flex items-center justify-center">
           <div className="text-center text-white/60">
             <div className="text-6xl mb-4">📹</div>
             <p className="text-xl mb-2">Video unavailable</p>
-            <p className="text-sm">Unable to load video player</p>
+            <p className="text-sm">No video ID provided</p>
           </div>
         </div>
       </div>
     )
   }
 
-  // Формируем URL для встроенного плеера
+  // Формируем URL для встроенного плеера БЕЗ ТОКЕНОВ (пока)
   const { libraryId } = bunnyConfig
-  const embedUrl = embedToken === 'no-token-required' 
-    ? `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?autoplay=false&preload=true`
-    : `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?token=${embedToken}&autoplay=false&preload=true`
+  const embedUrl = `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?autoplay=false&preload=true`
 
   // Показываем встроенный Bunny Stream плеер
   return (
@@ -180,7 +135,7 @@ export default function BunnyVideoPlayer({
         title={title}
       />
       
-      {/* Overlay с информацией о видео - показывается только при загрузке */}
+      {/* Overlay с информацией о видео */}
       <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2 opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
         <p className="text-white text-sm font-medium">{title}</p>
       </div>
