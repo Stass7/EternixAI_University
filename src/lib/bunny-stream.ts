@@ -62,6 +62,23 @@ export function getBunnyThumbnailUrl(videoId: string): string {
   return `https://${cdnHostname}/${videoId}/thumbnail.jpg`
 }
 
+// Генерация embed view токена для встроенного плеера
+export function generateEmbedViewToken(
+  videoId: string,
+  expiresInMinutes: number = 120,
+  securityKey: string = process.env.BUNNY_STREAM_SECURITY_KEY || ''
+): string {
+  const expires = Math.floor(Date.now() / 1000) + (expiresInMinutes * 60)
+  const hashableBase = `${securityKey}${videoId}${expires}`
+  
+  const hash = crypto
+    .createHash('sha256')
+    .update(hashableBase)
+    .digest('hex')
+  
+  return `${hash}${expires}`
+}
+
 // API методы для работы с Bunny Stream
 export class BunnyStreamAPI {
   private apiKey: string
