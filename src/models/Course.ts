@@ -1,5 +1,15 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
+// Интерфейс для файла урока
+interface ILessonFile {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: Date;
+}
+
 // Интерфейс для типизации урока
 interface ILesson {
   id: string;
@@ -11,7 +21,35 @@ interface ILesson {
   order: number;
   isNewLesson: boolean; // Метка "новый урок" (переименовано)
   newUntil: Date; // До какой даты считается новым
+  files?: ILessonFile[]; // Файлы урока (PDF, WORD, TXT и т.д.)
 }
+
+const LessonFileSchema = new Schema({
+  id: {
+    type: String,
+    required: true,
+  },
+  filename: {
+    type: String,
+    required: true,
+  },
+  originalName: {
+    type: String,
+    required: true,
+  },
+  mimeType: {
+    type: String,
+    required: true,
+  },
+  size: {
+    type: Number,
+    required: true,
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now,
+  }
+})
 
 const LessonSchema = new Schema({
   id: { 
@@ -50,6 +88,10 @@ const LessonSchema = new Schema({
   newUntil: {
     type: Date,
     default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 дней
+  },
+  files: {
+    type: [LessonFileSchema],
+    default: [],
   }
 })
 

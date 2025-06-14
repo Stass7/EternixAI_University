@@ -14,6 +14,15 @@ import mongoose from 'mongoose'
 // Принудительное использование динамического рендеринга
 export const dynamic = 'force-dynamic'
 
+interface LessonFile {
+  id: string
+  filename: string
+  originalName: string
+  mimeType: string
+  size: number
+  uploadedAt: Date
+}
+
 interface Lesson {
   id: string
   title: string
@@ -23,6 +32,7 @@ interface Lesson {
   duration?: number
   order: number
   isNewLesson: boolean
+  files?: LessonFile[] // Файлы урока
 }
 
 interface Course {
@@ -289,6 +299,44 @@ export default async function LessonPage({ params }: LessonPageProps) {
                   <p className="text-white/80 leading-relaxed">
                     {currentLesson.description}
                   </p>
+                </div>
+              )}
+
+              {/* Файлы урока */}
+              {(accessResult.hasAccess || isAdmin) && currentLesson.files && currentLesson.files.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">📎 Материалы урока</h3>
+                  <div className="space-y-3">
+                    {currentLesson.files.map((file) => (
+                      <div key={file.id} className="flex items-center justify-between bg-white/5 p-4 rounded-lg border border-white/10">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">
+                            {file.mimeType.includes('pdf') ? '📄' :
+                             file.mimeType.includes('word') ? '📝' :
+                             file.mimeType.includes('excel') || file.mimeType.includes('spreadsheet') ? '📊' :
+                             file.mimeType.includes('powerpoint') || file.mimeType.includes('presentation') ? '📋' :
+                             file.mimeType.includes('image') ? '🖼️' :
+                             file.mimeType.includes('zip') || file.mimeType.includes('rar') ? '📦' :
+                             file.mimeType.includes('text') ? '📄' : '📎'}
+                          </span>
+                          <div>
+                            <p className="text-white font-medium">{file.originalName}</p>
+                            <p className="text-white/60 text-sm">
+                              {(file.size / 1024 / 1024).toFixed(2)} МБ • {new Date(file.uploadedAt).toLocaleDateString('ru-RU')}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={`/api/lessons/files/${file.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-primary px-4 py-2 text-sm"
+                        >
+                          📥 Скачать
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
