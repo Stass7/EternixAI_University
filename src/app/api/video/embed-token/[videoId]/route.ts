@@ -8,7 +8,7 @@ import { generateEmbedViewToken } from '@/lib/bunny-stream'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { videoId: string } }
+  { params }: { params: Promise<{ videoId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { videoId } = params
+    const { videoId } = await params
     if (!videoId) {
       return NextResponse.json({ error: 'Video ID required' }, { status: 400 })
     }
