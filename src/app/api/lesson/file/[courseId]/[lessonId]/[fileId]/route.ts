@@ -69,12 +69,12 @@ export async function GET(
       console.log('🔧 Admin access granted for file:', fileId)
     } else {
       // Проверяем, купил ли пользователь курс
-      hasAccess = user.purchasedCourses?.includes(course._id.toString()) || false
+      hasAccess = user.coursesOwned?.includes(course._id) || false
       console.log('🔧 User file access check:', {
         userId: user._id,
         courseId: course._id,
         hasAccess,
-        purchasedCourses: user.purchasedCourses
+        coursesOwned: user.coursesOwned
       })
     }
 

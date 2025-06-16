@@ -55,12 +55,12 @@ export async function GET(
       console.log('🔧 Admin access granted for embed token:', videoId)
     } else {
       // Проверяем, купил ли пользователь курс
-      hasAccess = user.purchasedCourses?.includes(course._id.toString()) || false
+      hasAccess = user.coursesOwned?.includes(course._id) || false
       console.log('🔧 User access check for embed:', {
         userId: user._id,
         courseId: course._id,
         hasAccess,
-        purchasedCourses: user.purchasedCourses
+        coursesOwned: user.coursesOwned
       })
     }
 
