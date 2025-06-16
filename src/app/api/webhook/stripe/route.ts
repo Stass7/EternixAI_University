@@ -42,11 +42,21 @@ export async function POST(req: NextRequest) {
   }
 
   // Обработка события
+  console.log('🔔 Webhook received event:', event.type, 'Event ID:', event.id);
+  
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     
     try {
-      console.log('Processing payment for session:', session.id);
+      console.log('💳 Processing payment for session:', session.id);
+      console.log('📋 Session details:', {
+        sessionId: session.id,
+        paymentStatus: session.payment_status,
+        customerEmail: session.customer_details?.email,
+        amount: session.amount_total,
+        currency: session.currency,
+        metadata: session.metadata
+      });
       
       await connectToDatabase();
       
@@ -55,19 +65,26 @@ export async function POST(req: NextRequest) {
       const courseId = metadata?.courseId;
       const userId = metadata?.userId;
       
+      console.log('🔍 Extracted metadata:', { courseId, userId });
+      
       if (!courseId || !userId) {
-        console.error('Missing required metadata in session:', session.id);
+        console.error('❌ Missing required metadata in session:', session.id, 'Metadata:', metadata);
         return NextResponse.json({ error: 'Missing metadata' }, { status: 400 });
       }
 
       // Находим пользователя и курс
+      console.log('🔍 Searching for user and course:', { userId, courseId });
+      
       const [user, course] = await Promise.all([
         User.findById(userId),
         Course.findById(courseId)
       ]);
 
+      console.log('👤 User found:', user ? { id: user._id, email: user.email, coursesOwned: user.coursesOwned.length } : 'NOT FOUND');
+      console.log('📚 Course found:', course ? { id: course._id, title: course.title } : 'NOT FOUND');
+
       if (!user || !course) {
-        console.error('User or course not found:', { userId, courseId });
+        console.error('❌ User or course not found:', { userId, courseId, userFound: !!user, courseFound: !!course });
         return NextResponse.json({ error: 'User or course not found' }, { status: 404 });
       }
 
@@ -101,17 +118,29 @@ export async function POST(req: NextRequest) {
       await order.save();
 
       // Добавляем курс к купленным курсам пользователя (если еще не добавлен)
-      if (!user.coursesOwned.includes(course._id)) {
+      const courseAlreadyOwned = user.coursesOwned.includes(course._id);
+      console.log('🏠 Course ownership check:', { 
+        courseId: course._id, 
+        alreadyOwned: courseAlreadyOwned,
+        currentCoursesOwned: user.coursesOwned.map((id: any) => id.toString())
+      });
+      
+      if (!courseAlreadyOwned) {
+        console.log('➕ Adding course to user coursesOwned');
         user.coursesOwned.push(course._id);
         await user.save();
+        console.log('✅ Course added successfully. New coursesOwned:', user.coursesOwned.map((id: any) => id.toString()));
+      } else {
+        console.log('⚠️ Course already owned by user');
       }
 
-      console.log('Payment processed successfully:', {
+      console.log('🎉 Payment processed successfully:', {
         sessionId: session.id,
         userId: user._id,
         courseId: course._id,
         amount: session.amount_total,
-        email: session.customer_details?.email
+        email: session.customer_details?.email,
+        courseAdded: !courseAlreadyOwned
       });
 
       // TODO: Отправить email с подтверждением покупки
