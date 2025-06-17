@@ -20,10 +20,19 @@ export async function GET() {
 
     await connectToDatabase()
     
+    console.log('📊 Stats API: Looking for user with email:', session.user.email)
+    
     // Находим пользователя с заполненными курсами
     const user = await User.findOne({ email: session.user.email })
       .populate('coursesOwned', 'title lessons')
       .populate('favorites', 'title')
+    
+    console.log('📊 Stats API: User found:', user ? {
+      id: user._id,
+      email: user.email,
+      coursesOwnedCount: user.coursesOwned.length,
+      coursesOwnedIds: user.coursesOwned.map((course: any) => course._id?.toString() || course.toString())
+    } : 'NOT FOUND')
     
     if (!user) {
       return NextResponse.json(
@@ -31,6 +40,19 @@ export async function GET() {
         { status: 404 }
       )
     }
+
+    console.log('📊 Stats API: Raw coursesOwned before populate:', user.coursesOwned)
+    console.log('📊 Stats API: Populated courses details:', user.coursesOwned.map((course: any, index: number) => ({
+      index,
+      hasId: !!course._id,
+      hasTitle: !!course.title,
+      hasLessons: !!course.lessons,
+      courseData: course._id ? {
+        id: course._id.toString(),
+        title: course.title,
+        lessonsCount: course.lessons?.length || 0
+      } : 'UNPOPULATED_OBJECT_ID'
+    })))
 
     // Подсчитываем статистику
     const coursesPurchased = user.coursesOwned.length
