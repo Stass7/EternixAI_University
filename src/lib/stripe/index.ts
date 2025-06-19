@@ -8,7 +8,7 @@ if (!stripeApiKey && process.env.NODE_ENV !== 'development') {
 }
 
 const stripe = stripeApiKey ? new Stripe(stripeApiKey, {
-  // apiVersion: использую версию по умолчанию
+  apiVersion: '2025-04-30.basil',
 }) : null
 
 export async function createCheckoutSession(params: {
@@ -25,17 +25,17 @@ export async function createCheckoutSession(params: {
 
   const { courseId, courseTitle, price, userId, email, currency = 'usd' } = params
 
-  // Создаем сессию для оплаты
+  // Создаем сессию для оплаты с правильными параметрами для webhook
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
       {
         price_data: {
-          currency: currency, // Используем переданную валюту или USD по умолчанию
+          currency: currency,
           product_data: {
             name: courseTitle,
           },
-          unit_amount: Math.round(price * 100), // Stripe ожидает цену в центах
+          unit_amount: Math.round(price * 100),
         },
         quantity: 1,
       },
@@ -49,6 +49,16 @@ export async function createCheckoutSession(params: {
       courseId,
       userId,
     },
+    // Добавляем параметры для корректной генерации webhook событий
+    payment_intent_data: {
+      metadata: {
+        courseId,
+        userId,
+        email,
+      },
+    },
+    // Расширяем ответ для получения полной информации о payment_intent
+    expand: ['payment_intent'],
   })
 
   return session

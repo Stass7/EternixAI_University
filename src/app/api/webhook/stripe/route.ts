@@ -15,7 +15,7 @@ if (!stripeSecretKey) {
 }
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
-  // apiVersion: использую версию по умолчанию
+  apiVersion: '2025-04-30.basil',
 }) : null;
 
 export async function POST(req: NextRequest) {
