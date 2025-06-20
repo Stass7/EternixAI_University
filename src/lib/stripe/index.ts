@@ -8,7 +8,7 @@ if (!stripeApiKey && process.env.NODE_ENV !== 'development') {
 }
 
 const stripe = stripeApiKey ? new Stripe(stripeApiKey, {
-  apiVersion: '2025-04-30.basil',
+  // Убираем apiVersion для использования версии по умолчанию
 }) : null
 
 export async function createCheckoutSession(params: {
